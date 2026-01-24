@@ -31,7 +31,7 @@ header {
     padding: 20px;
     text-align: center;
     background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border-radius: 0 0 30px 30px;
     margin-bottom: 20px;
 }
@@ -52,7 +52,141 @@ h1 {
     padding-bottom: 40px;
 }
 
-/* Today's Section */
+/* Form & Input */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.modern-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1f5fe;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+}
+
+.btn-toggle-group {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e1f5fe;
+    background: white;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(114, 198, 239, 0.3);
+    transition: transform 0.2s;
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+/* History Log */
+.history-card {
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.log-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    animation: slideIn 0.3s ease-out;
+}
+
+.log-time {
+    font-size: 0.8rem;
+    color: #90a4ae;
+    font-weight: bold;
+    min-width: 45px;
+}
+
+.log-icon {
+    font-size: 1.2rem;
+}
+
+.log-content {
+    flex: 1;
+}
+
+.log-details {
+    font-size: 0.75rem;
+    color: #b0bec5;
+}
+
+.log-comment {
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Today's Section Upgrade */
 .today-card {
     background: var(--card-bg);
     padding: 25px;
@@ -62,49 +196,12 @@ h1 {
     border: 3px solid #e1f5fe;
 }
 
-.today-card h2 {
-    margin-top: 0;
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-}
-
-.btn-group {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.sticker-btn {
-    border: none;
-    background: none;
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.sticker-btn:active {
-    transform: scale(0.9);
-}
-
-.sticker-icon {
-    font-size: 3.5rem;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-}
-
-.sticker-btn span {
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
 /* Calendar Section */
 .calendar-card {
     background: var(--card-bg);
     padding: 20px;
     border-radius: 25px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
 }
 
 .calendar-header {
@@ -181,8 +278,15 @@ h1 {
 
 /* Animations */
 @keyframes pop {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .animate-pop {

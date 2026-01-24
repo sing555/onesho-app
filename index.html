@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ぴかぴかモーニング - おねしょカレンダー</title>
     <meta name="description" content="4歳の男の子のためのおねしょ記録アプリ。楽しく記録して、おねしょを卒業しよう！">
-    
+
     <!-- PWA Settings -->
     <meta name="theme-color" content="#72c6ef">
     <link rel="manifest" href="manifest.json">
@@ -14,31 +15,59 @@
     <!-- Styles & Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Outfit:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Outfit:wght@400;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
+
 <body>
     <header>
         <h1>☀️ ぴかぴかモーニング ☀️</h1>
     </header>
 
     <div class="main-container">
-        <!-- 今日の記録 -->
+        <!-- 記録入力フォーム -->
         <section class="today-card">
-            <h2 id="today-date">----年--月--日</h2>
-            <p>あさは ぴかぴか だったかな？</p>
-            <div class="btn-group">
-                <button class="sticker-btn" id="btn-success">
-                    <span class="sticker-icon">☀️</span>
-                    <span>ぴかぴか！</span>
-                </button>
-                <button class="sticker-btn" id="btn-fail">
-                    <span class="sticker-icon">☁️</span>
-                    <span>おもらし...</span>
-                </button>
+            <h2>きろくする</h2>
+
+            <div class="form-group">
+                <label>じかん</label>
+                <input type="time" id="input-time" class="modern-input">
+            </div>
+
+            <div class="form-group">
+                <label>どうだった？</label>
+                <div class="btn-toggle-group" id="status-toggle">
+                    <button class="toggle-btn active" data-value="success">☀️ できた！</button>
+                    <button class="toggle-btn" data-value="fail">☁️ もれた...</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>量は？</label>
+                <div class="btn-toggle-group" id="amount-toggle">
+                    <button class="toggle-btn" data-value="small">すくない</button>
+                    <button class="toggle-btn active" data-value="medium">ふつう</button>
+                    <button class="toggle-btn" data-value="large">おおい</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>メモ</label>
+                <input type="text" id="input-comment" placeholder="ひとことメモ" class="modern-input">
+            </div>
+
+            <button class="submit-btn" id="btn-save">きろくをのこす！</button>
+        </section>
+
+        <!-- 今日の履歴 -->
+        <section class="history-card">
+            <h3>きょうの ログ</h3>
+            <div id="log-list" class="log-list">
+                <!-- JSで追加 -->
             </div>
         </section>
 
@@ -70,4 +99,5 @@
         }
     </script>
 </body>
+
 </html>
