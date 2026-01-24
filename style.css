@@ -1,0 +1,190 @@
+:root {
+    --primary-color: #72c6ef;
+    --secondary-color: #ffd93d;
+    --bg-color: #f0f9ff;
+    --card-bg: #ffffff;
+    --text-color: #4a4a4a;
+    --accent-color: #ff8b8b;
+    --font-family: 'Outfit', 'Kiwi Maru', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+header {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 0 0 30px 30px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    font-weight: 800;
+}
+
+.main-container {
+    width: 90%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
+/* Today's Section */
+.today-card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(114, 198, 239, 0.15);
+    text-align: center;
+    border: 3px solid #e1f5fe;
+}
+
+.today-card h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.sticker-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.sticker-btn:active {
+    transform: scale(0.9);
+}
+
+.sticker-icon {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.sticker-btn span {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Calendar Section */
+.calendar-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.day-name {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #b0bec5;
+    padding-bottom: 5px;
+}
+
+.day {
+    aspect-ratio: 1;
+    background: #fdfdfd;
+    border: 1px solid #f0f0f0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 0.8rem;
+    transition: background 0.3s;
+}
+
+.day.today {
+    border: 2px solid var(--primary-color);
+    background: #e1f5fe;
+}
+
+.day.success::after {
+    content: "☀️";
+    font-size: 1.2rem;
+}
+
+.day.fail::after {
+    content: "☁️";
+    font-size: 1.2rem;
+}
+
+.day span {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    color: #cfd8dc;
+    font-size: 0.6rem;
+}
+
+/* Rewards Section */
+.reward-card {
+    background: var(--secondary-color);
+    padding: 20px;
+    border-radius: 25px;
+    color: #5d4037;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(255, 217, 61, 0.3);
+}
+
+.reward-count {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+/* Animations */
+@keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop {
+    animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
