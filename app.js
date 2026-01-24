@@ -1,3 +1,4 @@
+// App Version: 1.0.2
 const successCountEl = document.getElementById('success-count');
 const calendarTitleEl = document.getElementById('calendar-title');
 const calendarGridEl = document.getElementById('calendar-grid');

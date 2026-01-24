@@ -106,9 +106,41 @@
 
     <script src="app.js"></script>
     <script>
-        // Service Workerの登録
+        // Service Workerの登録と更新検知
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered:', registration);
+
+                    // 新しいService Workerがインストールされた時に通知
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // 新しいバージョンがある場合
+                                    console.log('New content is available; please refresh.');
+                                    // ユーザーに知らせるか、自動でリロード
+                                    if (confirm('新しいバージョンがあります。更新しますか？')) {
+                                        location.reload();
+                                    }
+                                }
+                            }
+                        };
+                    };
+                }).catch(error => {
+                    console.error('SW registration failed:', error);
+                });
+            });
+
+            // Service Workerが入れ替わった時に発火
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
         }
     </script>
 </body>
