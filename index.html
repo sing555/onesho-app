@@ -34,8 +34,21 @@
             <h2>きろくする</h2>
 
             <div class="form-group">
+                <label>ひにち</label>
+                <input type="date" id="input-date" class="modern-input">
+            </div>
+
+            <div class="form-group">
                 <label>じかん</label>
                 <input type="time" id="input-time" class="modern-input">
+            </div>
+
+            <div class="form-group">
+                <label>おしっこしたくなっていた？</label>
+                <div class="btn-toggle-group" id="urge-toggle">
+                    <button class="toggle-btn active" data-value="yes">あった！</button>
+                    <button class="toggle-btn" data-value="no">なかった</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -63,9 +76,9 @@
             <button class="submit-btn" id="btn-save">きろくをのこす！</button>
         </section>
 
-        <!-- 今日の履歴 -->
+        <!-- 履歴 -->
         <section class="history-card">
-            <h3>きょうの ログ</h3>
+            <h3><span id="log-date-label">きょう</span>の ログ</h3>
             <div id="log-list" class="log-list">
                 <!-- JSで追加 -->
             </div>
