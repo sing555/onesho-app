@@ -665,14 +665,169 @@ h1 {
     text-align: right;
 }
 
-.social-proof {
-    margin-top: 30px;
-    padding: 20px;
-    font-size: 0.8rem;
-    color: #90a4ae;
-    line-height: 1.8;
+/* Gacha System */
+.gacha-card {
+    background: linear-gradient(135deg, #fff9c4, #fffde7);
+    padding: 25px;
+    border-radius: 25px;
     text-align: center;
-    font-style: italic;
+    border: 3px dashed #fbc02d;
+}
+
+.gacha-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ticket-status {
+    background: white;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-weight: bold;
+    color: #fbc02d;
+    border: 2px solid #fff59d;
+    font-size: 0.9rem;
+}
+
+.gacha-btn {
+    width: 80%;
+    padding: 15px;
+    background: linear-gradient(135deg, #fbc02d, #f9a825);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(251, 192, 45, 0.4);
+    transition: all 0.2s;
+}
+
+.gacha-btn:disabled {
+    background: #e0e0e0;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.gacha-hint {
+    font-size: 0.75rem;
+    color: #f57f17;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* Prize Grid */
+.collection-area {
+    margin-top: 25px;
+    border-top: 1px solid #fff59d;
+    padding-top: 15px;
+}
+
+.collection-area h4 {
+    font-size: 0.8rem;
+    color: #f9a825;
+    margin-bottom: 10px;
+}
+
+.prize-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.prize-slot {
+    aspect-ratio: 1;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    border: 1px solid #fff9c4;
+}
+
+/* Gacha Animation Overlay */
+.gacha-animation-container {
+    text-align: center;
+}
+
+.gacha-box-shake {
+    font-size: 8rem;
+    animation: shake 0.5s infinite;
+    cursor: default;
+}
+
+@keyframes shake {
+    0% {
+        transform: translate(1px, 1px) rotate(0deg);
+    }
+
+    10% {
+        transform: translate(-1px, -2px) rotate(-1deg);
+    }
+
+    20% {
+        transform: translate(-3px, 0px) rotate(1deg);
+    }
+
+    30% {
+        transform: translate(3px, 2px) rotate(0deg);
+    }
+
+    40% {
+        transform: translate(1px, -1px) rotate(1deg);
+    }
+}
+
+.prize-result-card {
+    background: white;
+    padding: 40px;
+    border-radius: 30px;
+    border: 5px solid #2196f3;
+    position: relative;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+}
+
+.rarity-badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 20px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.rarity-UR {
+    background: linear-gradient(45deg, #ff00ea, #00d2ff);
+    box-shadow: 0 0 15px #00d2ff;
+}
+
+.rarity-SR {
+    background: linear-gradient(45deg, #ff9800, #ffeb3b);
+}
+
+.rarity-R {
+    background: #9c27b0;
+}
+
+.rarity-N {
+    background: #90a4ae;
+}
+
+.prize-emoji {
+    font-size: 5rem;
+    margin: 10px 0;
+}
+
+.prize-name {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: #333;
 }
 
 /* Heatmap Analysis */

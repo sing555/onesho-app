@@ -160,6 +160,29 @@
                 </div>
             </section>
 
+            <!-- がちゃセクション（新機能：報酬予測誤差） -->
+            <section class="gacha-card">
+                <div class="gacha-header">
+                    <h3>🎁 おたから がちゃ</h3>
+                    <div class="ticket-status">
+                        🎫 × <span id="gacha-tickets">0</span>
+                    </div>
+                </div>
+                <div class="gacha-body">
+                    <p class="gacha-hint">きろくを すると、チケットが もらえるよ！</p>
+                    <button id="btn-draw-gacha" class="gacha-btn" disabled>
+                        がちゃを ひく！
+                    </button>
+                </div>
+
+                <div class="collection-area">
+                    <h4>あつめた おたから</h4>
+                    <div id="prize-collection" class="prize-grid">
+                        <!-- コレクションを表示 -->
+                    </div>
+                </div>
+            </section>
+
             <!-- 傾向分析ヒートマップ（曜日×時間帯） -->
             <section class="chart-card">
                 <h3>週間リズムの しんだん</h3>
@@ -234,46 +257,63 @@
             </div>
 
             <div style="font-size: 0.6rem; color: #ccc; margin-top: 20px; text-align: center;">
-                App Version 6.1 (Network First Mode)
+                App Version 7.0 (Gamified Habit Builder)
             </div>
         </div>
+    </div>
 
-        <script>
-            // Service Workerの登録と更新検知
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('sw.js').then(registration => {
-                        console.log('SW registered:', registration);
+    <!-- がちゃ演出オーバーレイ -->
+    <div id="gacha-overlay" class="login-overlay" style="display: none;">
+        <div class="gacha-animation-container">
+            <div id="gacha-box" class="gacha-box-shake">🎁</div>
+            <div id="gacha-light" class="gacha-light"></div>
+            <p id="gacha-loading-text">なかが 出るよ... ドキドキ...</p>
 
-                        // 新しいService Workerがインストールされた時に通知
-                        registration.onupdatefound = () => {
-                            const installingWorker = registration.installing;
-                            installingWorker.onstatechange = () => {
-                                if (installingWorker.state === 'installed') {
-                                    if (navigator.serviceWorker.controller) {
-                                        // 新しいバージョンがある場合
-                                        console.log('New content is available; please refresh.');
-                                        // ユーザーに知らせるか、自動でリロード
-                                        if (confirm('新しいバージョンがあります。更新しますか？')) {
-                                            location.reload();
-                                        }
+            <div id="gacha-result" class="prize-result-card animate-pop" style="display: none;">
+                <div class="rarity-badge" id="prize-rarity">UR</div>
+                <div class="prize-emoji" id="prize-icon">🚀</div>
+                <div class="prize-name" id="prize-name">うちゅうせん</div>
+                <button id="btn-close-gacha" class="submit-btn" style="margin-top: 20px;">やったー！</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Service Workerの登録と更新検知
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered:', registration);
+
+                    // 新しいService Workerがインストールされた時に通知
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // 新しいバージョンがある場合
+                                    console.log('New content is available; please refresh.');
+                                    // ユーザーに知らせるか、自動でリロード
+                                    if (confirm('新しいバージョンがあります。更新しますか？')) {
+                                        location.reload();
                                     }
                                 }
-                            };
+                            }
                         };
-                    }).catch(error => {
-                        console.error('SW registration failed:', error);
-                    });
+                    };
+                }).catch(error => {
+                    console.error('SW registration failed:', error);
                 });
+            });
 
-                // Service Workerが入れ替わった時に発火
-                let refreshing = false;
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    navigator.serviceWorker.register('sw.js');
-                });
-            }
-        </script>
-        <script type="module" src="app.js"></script>
+            // Service Workerが入れ替わった時に発火
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>
