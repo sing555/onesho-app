@@ -91,6 +91,7 @@ function renderAll() {
     renderLog();
     renderCalendar();
     renderHeatmap();
+    updateStreak();
 }
 
 // --- Analysis View Logic ---
@@ -281,6 +282,53 @@ window.deleteEntry = async (key, index) => {
 };
 
 // --- Calendar & Sync ---
+function updateStreak() {
+    const streakEl = document.getElementById('streak-counter');
+    const streakDaysEl = document.getElementById('streak-days');
+    if (!streakEl || !streakDaysEl) return;
+
+    let streak = 0;
+    const now = new Date();
+    // Start checking from yesterday to see the current ongoing streak
+    let checkDate = new Date(now);
+
+    // An "all-dry" day is a day that has at least one record and ZERO 'fail' records.
+    // If a day has no records, we treat it as unknown and break the streak.
+
+    while (true) {
+        const key = formatDateForInput(checkDate);
+        const dayLogs = historyData[key];
+
+        if (dayLogs && dayLogs.length > 0) {
+            const hasFail = dayLogs.some(l => l.type === 'fail');
+            if (!hasFail) {
+                streak++;
+            } else {
+                // If today has a fail, the streak is 0 unless we are looking at a past streak.
+                // But usually, streak is "up to yesterday". 
+                // Let's count "consecutive dry days up to today".
+                break;
+            }
+        } else {
+            // No records for this day. 
+            // If it's today and no records yet, we continue checking yesterday.
+            const todayStr = formatDateForInput(now);
+            if (key !== todayStr) {
+                break;
+            }
+        }
+        checkDate.setDate(checkDate.getDate() - 1);
+        if (streak > 365) break; // Safety break
+    }
+
+    if (streak > 0) {
+        streakEl.style.display = 'inline-flex';
+        streakDaysEl.textContent = streak;
+    } else {
+        streakEl.style.display = 'none';
+    }
+}
+
 function renderCalendar() {
     calendarGridEl.innerHTML = '';
     calendarTitleEl.textContent = `${selectedYear}年 ${selectedMonth + 1}月`;

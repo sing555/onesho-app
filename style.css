@@ -59,6 +59,25 @@ header h1 {
     margin-top: 2px;
 }
 
+.streak-badge {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #f57c00;
+    margin-top: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #fff59d;
+}
+
+.streak-icon {
+    margin-right: 4px;
+    font-size: 0.9rem;
+}
+
 .logout-link {
     background: none;
     border: none;
