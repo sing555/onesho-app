@@ -23,11 +23,19 @@ const analytics = getAnalytics(app);
 
 // --- State ---
 const loginOverlay = document.getElementById('login-overlay');
+const onboardingOverlay = document.getElementById('onboarding-overlay');
+const loadingOverlay = document.getElementById('loading-overlay');
 const appContent = document.getElementById('app-content');
+
 const btnLogin = document.getElementById('btn-login');
 const btnGuest = document.getElementById('btn-guest');
 const btnLogout = document.getElementById('btn-logout');
+const btnSetupComplete = document.getElementById('btn-setup-complete');
+
 const userInfoEl = document.getElementById('user-info');
+const appTitleEl = document.getElementById('app-title');
+const emotionalMsgEl = document.getElementById('emotional-msg');
+const childNameInput = document.getElementById('child-name-input');
 
 const successCountEl = document.getElementById('success-count');
 const calendarTitleEl = document.getElementById('calendar-title');
@@ -45,9 +53,10 @@ let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
 
 const STICKER_THRESHOLD = 5;
-const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
+const stickers = ['🚒', '🚓', '🦁', 'REX', '🚀'];
 
-// ローカルのデータ（Firestoreと同期対象）
+// ユーザー設定（名前など）
+let userSettings = JSON.parse(localStorage.getItem('onesho-v3-settings') || '{}');
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
 let currentUser = null;
 
@@ -60,18 +69,37 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         loginOverlay.style.display = 'none';
-        appContent.style.display = 'flex';
-        userInfoEl.textContent = `${user.email} で ログイン中 (クラウド同期中)`;
 
         await syncDataOnLogin();
-        init();
+
+        // 名前が未設定ならオンボーディング表示
+        if (!userSettings.childName) {
+            onboardingOverlay.style.display = 'flex';
+        } else {
+            showAppWithPersonalization();
+        }
     } else {
         currentUser = null;
-        if (appContent.style.display !== 'flex') {
+        if (appContent.style.display !== 'flex' && onboardingOverlay.style.display !== 'flex') {
             loginOverlay.style.display = 'flex';
         }
     }
 });
+
+function showAppWithPersonalization() {
+    onboardingOverlay.style.display = 'none';
+    appContent.style.display = 'flex';
+
+    const name = userSettings.childName || "お子さま";
+    appTitleEl.textContent = `☀️ ${name}のきろく ☀️`;
+    emotionalMsgEl.textContent = `今日の「きろく」は、${name}くんの自信に繋がります。`;
+
+    if (currentUser) {
+        userInfoEl.textContent = `${currentUser.email} で ログイン中`;
+    }
+
+    init();
+}
 
 btnLogin.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
@@ -83,14 +111,31 @@ btnLogin.addEventListener('click', () => {
 
 btnGuest.addEventListener('click', () => {
     loginOverlay.style.display = 'none';
-    appContent.style.display = 'flex';
-    userInfoEl.textContent = "ゲストモード (このブラウザにのみ保存されます)";
-    init();
+    onboardingOverlay.style.display = 'flex';
+});
+
+btnSetupComplete.addEventListener('click', async () => {
+    const name = childNameInput.value.trim();
+    if (!name) { alert("お名前を 教えてね！"); return; }
+
+    // 心理的演出：プラン作成中アニメーション
+    onboardingOverlay.style.display = 'none';
+    loadingOverlay.style.display = 'flex';
+
+    userSettings.childName = name;
+    localStorage.setItem('onesho-v3-settings', JSON.stringify(userSettings));
+
+    setTimeout(async () => {
+        await syncToFirestore();
+        loadingOverlay.style.display = 'none';
+        showAppWithPersonalization();
+    }, 2000);
 });
 
 btnLogout.addEventListener('click', () => {
     if (confirm("ログアウトしますか？")) {
         signOut(auth).then(() => {
+            localStorage.removeItem('onesho-v3-settings'); // 名前設定などもクリア
             location.reload();
         });
     }
@@ -103,9 +148,14 @@ async function syncDataOnLogin() {
         const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            const cloudData = docSnap.data().history || {};
-            const merged = { ...cloudData, ...historyData };
-            historyData = merged;
+            const data = docSnap.data();
+            const cloudData = data.history || {};
+            historyData = { ...cloudData, ...historyData };
+
+            // 設定（名前）も同期
+            if (data.settings) {
+                userSettings = { ...userSettings, ...data.settings };
+            }
         }
         saveLocal();
         await syncToFirestore();
@@ -119,9 +169,9 @@ async function syncToFirestore() {
     try {
         await setDoc(doc(db, "users", currentUser.uid), {
             history: historyData,
+            settings: userSettings,
             updatedAt: Date.now()
         }, { merge: true });
-        console.log("Cloud synced.");
     } catch (err) {
         console.error("Sync Error:", err);
     }
@@ -129,6 +179,7 @@ async function syncToFirestore() {
 
 function saveLocal() {
     localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
+    localStorage.setItem('onesho-v3-settings', JSON.stringify(userSettings));
 }
 
 // --- App Logic ---
@@ -202,21 +253,16 @@ btnSave.addEventListener('click', async () => {
     const entry = { time, type, amount, urge, comment, timestamp: Date.now() };
 
     if (editingKey !== null && editingIndex !== null) {
-        // 編集保存
         historyData[editingKey][editingIndex] = entry;
-        editingKey = null;
-        editingIndex = null;
+        editingKey = null; editingIndex = null;
         btnSave.textContent = 'きろくをのこす！';
         btnSave.style.background = '';
     } else {
-        // 新規保存
         if (!historyData[dateStr]) historyData[dateStr] = [];
         historyData[dateStr].push(entry);
     }
 
-    if (historyData[dateStr]) {
-        historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
-    }
+    if (historyData[dateStr]) historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
 
     saveLocal();
     await syncToFirestore();
@@ -240,22 +286,18 @@ window.quickLog = async function (type) {
     const now = new Date();
     const dateStr = formatDateForInput(now);
     const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
     if (!historyData[dateStr]) historyData[dateStr] = [];
     const entry = { time, type, amount: 'medium', urge: 'unknown', comment: 'クイック！', timestamp: Date.now() };
     historyData[dateStr].push(entry);
     historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
-
     saveLocal();
     await syncToFirestore();
-
     const btn = document.querySelector(`.quick-btn.${type}`);
     if (btn) {
         const originalText = btn.textContent;
         btn.textContent = '✨ OK!';
         setTimeout(() => btn.textContent = originalText, 1000);
     }
-
     if (type === 'success') { launchConfetti(); } else { showPuffyToast(); }
     activeViewDate = dateStr;
     renderAll();
@@ -269,7 +311,6 @@ function updateStickers() {
     const stickerGrid = document.getElementById('sticker-grid');
     const statusText = document.getElementById('sticker-status');
     if (!stickerGrid) return;
-
     stickerGrid.innerHTML = '';
     const earnedCount = Math.floor(totalSuccess / STICKER_THRESHOLD);
     const progress = totalSuccess % STICKER_THRESHOLD;
@@ -294,25 +335,18 @@ function renderChart() {
     const height = canvas.offsetHeight;
     const stats = Array(24).fill(0);
     Object.values(historyData).forEach(dayLogs => {
-        dayLogs.forEach(entry => {
-            const h = parseInt(entry.time.split(':')[0]);
-            stats[h]++;
-        });
+        dayLogs.forEach(entry => { const h = parseInt(entry.time.split(':')[0]); stats[h]++; });
     });
     const maxVal = Math.max(...stats, 1);
     ctx.clearRect(0, 0, width, height);
     const barWidth = width / 24;
     stats.forEach((val, i) => {
         const barHeight = (val / maxVal) * (height - 20);
-        ctx.fillStyle = '#72c6ef';
-        if (i >= 20 || i <= 6) ctx.fillStyle = '#ffb74d';
+        ctx.fillStyle = (i >= 20 || i <= 6) ? '#ffb74d' : '#72c6ef';
         ctx.fillRect(i * barWidth, height - barHeight, barWidth - 2, barHeight);
     });
-    ctx.fillStyle = '#999';
-    ctx.font = '8px sans-serif';
-    ctx.fillText('0じ', 0, height);
-    ctx.fillText('12じ', width / 2 - 10, height);
-    ctx.fillText('23じ', width - 20, height);
+    ctx.fillStyle = '#999'; ctx.font = '8px sans-serif';
+    ctx.fillText('0じ', 0, height); ctx.fillText('12じ', width / 2 - 10, height); ctx.fillText('23じ', width - 20, height);
 }
 
 window.generateReport = function () {
@@ -330,19 +364,13 @@ window.generateReport = function () {
     reportText.push(`${month}月のせいせき: ${total}回中 ${success}回 できた！`);
     const allLogs = [];
     Object.keys(historyData).sort().reverse().forEach(date => {
-        historyData[date].forEach(l => {
-            const icon = l.type === 'success' ? '☀️' : '🌈';
-            allLogs.push(`${date} ${l.time}: ${icon}`);
-        });
+        historyData[date].forEach(l => { const icon = l.type === 'success' ? '☀️' : '🌈'; allLogs.push(`${date} ${l.time}: ${icon}`); });
     });
     reportText.push(...allLogs.slice(0, 5));
-    alert(reportText.join('\n') + '\n\n(このテキストをスクショして先生に見せてね！)');
+    alert(reportText.join('\n'));
 };
 
-function launchConfetti() {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#72c6ef', '#ffd93d', '#ff8b8b', '#ffffff'] });
-}
-
+function launchConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#72c6ef', '#ffd93d', '#ff8b8b', '#ffffff'] }); }
 function showPuffyToast() {
     const toast = document.createElement('div');
     toast.className = 'puffy-toast animate-pop';
@@ -355,11 +383,7 @@ function updateStats() {
     const now = new Date();
     const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-`;
     let count = 0;
-    Object.keys(historyData).forEach(key => {
-        if (key.startsWith(monthPrefix)) {
-            count += historyData[key].filter(e => e.type === 'success').length;
-        }
-    });
+    Object.keys(historyData).forEach(key => { if (key.startsWith(monthPrefix)) count += historyData[key].filter(e => e.type === 'success').length; });
     successCountEl.textContent = count;
 }
 
@@ -368,7 +392,6 @@ function renderLog() {
     const todayStr = formatDateForInput(new Date());
     logDateLabel.textContent = (activeViewDate === todayStr) ? 'きょう' : activeViewDate.replace(/-/g, '/');
     logListEl.innerHTML = logs.length ? '' : '<p style="color:#cfd8dc; font-size:0.9rem;">まだ きろくが ありません</p>';
-
     logs.forEach((log, index) => {
         const div = document.createElement('div');
         div.className = 'log-item animate-pop';
@@ -376,14 +399,10 @@ function renderLog() {
         const urgeJp = log.urge === 'yes' ? '尿意あり' : '尿意なし';
         const icon = log.type === 'success' ? '☀️' : '🌈';
         const statusText = log.type === 'success' ? 'できた！' : 'おしい！';
-
         div.innerHTML = `
             <div class="log-time">${log.time}</div>
             <div class="log-icon">${icon}</div>
-            <div class="log-content">
-                <div class="log-details">${statusText} / ${amountJp} / ${urgeJp}</div>
-                ${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}
-            </div>
+            <div class="log-content"><div class="log-details">${statusText} / ${amountJp} / ${urgeJp}</div>${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}</div>
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <button class="edit-btn" data-key="${activeViewDate}" data-index="${index}" style="background:none; border:none; color:#72c6ef; font-size:0.8rem; cursor:pointer;">しゅうせい</button>
                 <button class="delete-btn" data-key="${activeViewDate}" data-index="${index}" style="background:none; border:none; color:#ff8b8b; font-size:0.8rem; cursor:pointer;">サヨナラ</button>
@@ -391,8 +410,6 @@ function renderLog() {
         `;
         logListEl.appendChild(div);
     });
-
-    // 削除イベント
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const key = e.target.getAttribute('data-key');
@@ -400,14 +417,10 @@ function renderLog() {
             if (confirm('このきろくを けしても いい？')) {
                 historyData[key].splice(index, 1);
                 if (historyData[key].length === 0) delete historyData[key];
-                saveLocal();
-                await syncToFirestore();
-                renderAll();
+                saveLocal(); await syncToFirestore(); renderAll();
             }
         });
     });
-
-    // 修正イベント
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const key = e.target.getAttribute('data-key');
@@ -419,22 +432,10 @@ function renderLog() {
 
 function startEdit(key, index) {
     const log = historyData[key][index];
-    editingKey = key;
-    editingIndex = index;
-
-    // フォームに値をセット
-    inputDate.value = key;
-    inputTime.value = log.time;
-    inputComment.value = log.comment || '';
-    setToggleValue('status-toggle', log.type);
-    setToggleValue('urge-toggle', log.urge);
-    setToggleValue('amount-toggle', log.amount);
-
-    // ボタンの見た目変更
-    btnSave.textContent = '✨ しゅうせいする！';
-    btnSave.style.background = '#ffd93d';
-
-    // 入力エリアまでスクロール
+    editingKey = key; editingIndex = index;
+    inputDate.value = key; inputTime.value = log.time; inputComment.value = log.comment || '';
+    setToggleValue('status-toggle', log.type); setToggleValue('urge-toggle', log.urge); setToggleValue('amount-toggle', log.amount);
+    btnSave.textContent = '✨ しゅうせいする！'; btnSave.style.background = '#ffd93d';
     document.querySelector('.today-card').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -443,50 +444,30 @@ function renderCalendar() {
     calendarTitleEl.textContent = `${selectedYear}年 ${selectedMonth + 1}月`;
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
     dayNames.forEach(name => {
-        const div = document.createElement('div');
-        div.className = 'day-name';
-        div.textContent = name;
-        calendarGridEl.appendChild(div);
+        const div = document.createElement('div'); div.className = 'day-name'; div.textContent = name; calendarGridEl.appendChild(div);
     });
     const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) { calendarGridEl.appendChild(document.createElement('div')); }
     const todayStr = formatDateForInput(new Date());
     for (let day = 1; day <= daysInMonth; day++) {
-        const div = document.createElement('div');
-        div.className = 'day';
+        const div = document.createElement('div'); div.className = 'day';
         const dayDate = new Date(selectedYear, selectedMonth, day);
         const key = formatDateForInput(dayDate);
         if (key === todayStr) div.classList.add('today');
         if (key === activeViewDate) div.style.borderColor = '#ffd93d';
         const dayLogs = historyData[key] || [];
         if (dayLogs.length > 0) {
-            const hasSuccess = dayLogs.some(l => l.type === 'success');
-            const hasFail = dayLogs.some(l => l.type === 'fail');
+            const hasSuccess = dayLogs.some(l => l.type === 'success'); const hasFail = dayLogs.some(l => l.type === 'fail');
             if (hasSuccess && !hasFail) div.style.background = '#e1f5fe';
             else if (hasFail && !hasSuccess) div.style.background = '#fff3e0';
             else if (hasSuccess && hasFail) div.style.background = 'linear-gradient(135deg, #e1f5fe 50%, #fff3e0 50%)';
         }
-        const span = document.createElement('span');
-        span.textContent = day;
-        div.appendChild(span);
-        div.addEventListener('click', () => {
-            activeViewDate = key;
-            inputDate.value = key;
-            renderAll();
-        });
+        const span = document.createElement('span'); span.textContent = day; div.appendChild(span);
+        div.addEventListener('click', () => { activeViewDate = key; inputDate.value = key; renderAll(); });
         calendarGridEl.appendChild(div);
     }
 }
 
-document.getElementById('prev-month').addEventListener('click', () => {
-    selectedMonth--;
-    if (selectedMonth < 0) { selectedMonth = 11; selectedYear--; }
-    renderCalendar();
-});
-
-document.getElementById('next-month').addEventListener('click', () => {
-    selectedMonth++;
-    if (selectedMonth > 11) { selectedMonth = 0; selectedYear++; }
-    renderCalendar();
-});
+document.getElementById('prev-month').addEventListener('click', () => { selectedMonth--; if (selectedMonth < 0) { selectedMonth = 11; selectedYear--; } renderCalendar(); });
+document.getElementById('next-month').addEventListener('click', () => { selectedMonth++; if (selectedMonth > 11) { selectedMonth = 0; selectedYear++; } renderCalendar(); });

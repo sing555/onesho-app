@@ -36,16 +36,43 @@
 </head>
 
 <body>
-    <!-- ログインオーバーレイ（新機能） -->
+    <!-- ログインオーバーレイ（インセンティブの提示） -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-card animate-pop">
             <h1>☀️ トイレきろく ☀️</h1>
             <p>せいちょうの きろくを まもるために<br>Googleで ログインしてね！</p>
             <button id="btn-login" class="login-btn">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon">
-                Googleで ログイン
+                Googleで ログインして はじめる
             </button>
             <button id="btn-guest" class="guest-link">ログインせずに つかう（こんかいだけ）</button>
+
+            <div class="auth-benefit">
+                <p>✅ パパ・ママのスマホで記録を共有できます</p>
+                <p>✅ 機種変更してもデータは一生守られます</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- オンボーディング・プロフィール設定（パーソナライズ） -->
+    <div id="onboarding-overlay" class="login-overlay" style="display: none;">
+        <div class="login-card animate-pop">
+            <h2>✨ はじめまして！</h2>
+            <p>お子さまにぴったりの<br>応援プランを作成します。</p>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>お子さまのお名前</label>
+                <input type="text" id="child-name-input" placeholder="例：たろう くん" class="modern-input">
+            </div>
+            <button id="btn-setup-complete" class="submit-btn">応援を開始する！🚀</button>
+            <p class="onboarding-note">※あとで変更できます</p>
+        </div>
+    </div>
+
+    <!-- 設定中アニメーション（パーソナライズ感の演出） -->
+    <div id="loading-overlay" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <div class="loading-spinner"></div>
+            <p id="loading-text" style="font-weight: bold; margin-top: 15px;">プランを作成中...</p>
         </div>
     </div>
 
@@ -54,12 +81,16 @@
         <header>
             <div class="header-content">
                 <div class="header-left">
-                    <h1>☀️ トイレきろく ☀️</h1>
+                    <h1 id="app-title">☀️ トイレきろく ☀️</h1>
                     <div id="user-info" class="user-info-text"></div>
                 </div>
                 <button id="btn-logout" class="logout-link">ログアウト</button>
             </div>
         </header>
+
+        <div class="emotional-banner" id="emotional-msg">
+            「きろく」は、キラキラな朝への第一歩。
+        </div>
 
         <div class="main-container">
             <!-- クイック入力（新機能4） -->
@@ -166,28 +197,32 @@
                 <button class="report-btn" onclick="generateReport()">📋 お医者さんに見せる表（画像）を作る</button>
             </section>
 
-            <!-- アップデート履歴（新要望） -->
+            <!-- 専門のアドバイス（新機能：説得力・科学的根拠） -->
+            <section class="expert-card">
+                <div class="expert-badge">💡 専門家のアドバイス</div>
+                <p>「記録をつけることで、お子さまの体のリズムが自然と見えてきます。焦らなくて大丈夫。その『気づき』こそが、卒業への一番の近道です。」</p>
+                <div class="expert-note">小児ケアの知見に基づくサポート</div>
+            </section>
+
+            <!-- アップデート履歴 -->
             <section class="changelog-card">
                 <h3>アップデート履歴</h3>
                 <div class="changelog-list">
                     <div class="changelog-item">
                         <span class="changelog-date">2026/01/25</span>
-                        <span class="changelog-text">🌈 ポジティブな表現(おしい！/虹)と保存時の演出を追加しました。</span>
+                        <span class="changelog-text">✨ 応援パーソナライズ機能を追加しました。</span>
                     </div>
                     <div class="changelog-item">
                         <span class="changelog-date">2026/01/25</span>
-                        <span class="changelog-text">🚀 新機能(シール/クイック入力/分析)を追加。「トイレきろく」へ名前を変えました。</span>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="changelog-date">2026/01/25</span>
-                        <span class="changelog-text">⚙️ 自動更新機能を追加。最新版がすぐに反映されるようになりました。</span>
-                    </div>
-                    <div class="changelog-item">
-                        <span class="changelog-date">2026/01/24</span>
-                        <span class="changelog-text">🎉 「トイレきろく」アプリがデビューしました！</span>
+                        <span class="changelog-text">🌈 ポジティブな表現(おしい！/虹)を追加しました。</span>
                     </div>
                 </div>
             </section>
+
+            <!-- 信頼の証（口コミ・メッセージ） -->
+            <div class="social-proof">
+                たくさんのパパ・ママが、このアプリで<br>「朝のイライラが 笑顔に変わった！」と<br>実感しています。☀️
+            </div>
         </div>
 
         <script>

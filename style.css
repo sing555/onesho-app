@@ -557,7 +557,105 @@ h1 {
 
 /* Ensure app-content children are centered */
 #app-content {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+/* Psychological Design Elements */
+.auth-benefit {
+    margin-top: 25px;
+    padding: 15px;
+    background: #fdfae6;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    text-align: left;
+    color: #856404;
+}
+
+.auth-benefit p {
+    margin: 5px 0;
+}
+
+.onboarding-note {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 15px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.emotional-banner {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(to right, #e1f5fe, #f0f9ff);
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid #e1f5fe;
+}
+
+.expert-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 20px;
+    border-left: 5px solid var(--primary-color);
+    margin-top: 10px;
+    text-align: left;
+}
+
+.expert-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.expert-card p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #555;
+    margin: 0;
+    font-style: italic;
+}
+
+.expert-note {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 10px;
+    text-align: right;
+}
+
+.social-proof {
+    margin-top: 30px;
+    padding: 20px;
+    font-size: 0.8rem;
+    color: #90a4ae;
+    line-height: 1.8;
+    text-align: center;
+    font-style: italic;
 }
