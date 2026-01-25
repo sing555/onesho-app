@@ -134,26 +134,30 @@ function renderHeatmap() {
         grid.appendChild(label);
     });
 
-    // Body: Hours rows
-    for (let hour = 0; hour < 24; hour++) {
-        // Left label for the hour
+    // Body: Hours rows (2-hour blocks to save space)
+    for (let hBlock = 0; hBlock < 12; hBlock++) {
+        const hourStart = hBlock * 2;
+
+        // Left label for the hour block
         const hLabel = document.createElement('div');
         hLabel.className = 'hour-label';
-        // Show labels only for 0, 4, 8, 12, 16, 20
-        if (hour % 4 === 0) {
-            hLabel.textContent = hour;
+        // Show labels every 4 hours (0, 4, 8, 12, 16, 20)
+        if (hourStart % 4 === 0) {
+            hLabel.textContent = hourStart;
         }
         grid.appendChild(hLabel);
 
         for (let day = 0; day < 7; day++) {
-            const count = matrix[day][hour];
+            // Sum counts for the 2-hour block
+            const count = matrix[day][hourStart] + matrix[day][hourStart + 1];
+
             const cell = document.createElement('div');
             let level = 0;
             if (count > 0) level = 1;
             if (count > 2) level = 2;
             if (count > 4) level = 3;
             cell.className = `heatmap-cell level-${level}`;
-            cell.title = `${dayLabels[day]}曜 ${hour}時: ${count}件`;
+            cell.title = `${dayLabels[day]}曜 ${hourStart}-${hourStart + 1}時: ${count}件`;
             grid.appendChild(cell);
         }
     }

@@ -172,9 +172,10 @@ section h3 {
 
 .heatmap-wrapper {
     background: #fafafa;
-    padding: 10px;
+    padding: 10px 10px 5px 10px;
     border-radius: 12px;
     border: 1px solid #f1f5f9;
+    overflow-x: hidden;
 }
 
 .heatmap-header-hours {
@@ -192,7 +193,7 @@ section h3 {
 }
 
 .heatmap-cell {
-    aspect-ratio: 1;
+    height: 12px;
     border-radius: 2px;
     background: #f1f5f9;
 }
@@ -208,12 +209,14 @@ section h3 {
 }
 
 .hour-label {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: #94a3b8;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 5px;
+    padding-right: 6px;
+    height: 12px;
+    line-height: 1;
 }
 
 .level-1 {
