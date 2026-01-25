@@ -55,7 +55,13 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         loginOverlay.style.display = 'none';
-        appContent.style.display = 'block';
+        appContent.style.display = 'flex'; // blockからflexに変更して中央寄せ
+
+        // ユーザー情報を表示
+        const userInfoEl = document.getElementById('user-info');
+        if (userInfoEl) {
+            userInfoEl.textContent = `${user.email} で ログイン中`;
+        }
 
         // Firestoreからデータ取得
         await syncFromFirestore();

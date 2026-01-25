@@ -511,8 +511,19 @@ h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 90%;
     max-width: 500px;
     margin: 0 auto;
+}
+
+.header-left {
+    text-align: left;
+}
+
+.user-info-text {
+    font-size: 0.65rem;
+    color: #90a4ae;
+    margin-top: 2px;
 }
 
 .logout-link {
@@ -522,4 +533,12 @@ h1 {
     font-size: 0.8rem;
     text-decoration: underline;
     cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Ensure app-content children are centered */
+#app-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
