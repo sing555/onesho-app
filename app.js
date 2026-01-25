@@ -51,6 +51,10 @@ const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
 let currentUser = null;
 
+// 編集モードの状態
+let editingKey = null;
+let editingIndex = null;
+
 // --- Auth Handling ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -59,12 +63,10 @@ onAuthStateChanged(auth, async (user) => {
         appContent.style.display = 'flex';
         userInfoEl.textContent = `${user.email} で ログイン中 (クラウド同期中)`;
 
-        // Firestoreからデータを読み込み、ローカルとマージする
         await syncDataOnLogin();
         init();
     } else {
         currentUser = null;
-        // 自動でログイン画面に戻すが、ゲストモード中は戻さない
         if (appContent.style.display !== 'flex') {
             loginOverlay.style.display = 'flex';
         }
@@ -89,29 +91,22 @@ btnGuest.addEventListener('click', () => {
 btnLogout.addEventListener('click', () => {
     if (confirm("ログアウトしますか？")) {
         signOut(auth).then(() => {
-            location.reload(); // 状態をクリアするためリロード
+            location.reload();
         });
     }
 });
 
 // --- Data Sync ---
-
-// ログイン時にクラウドとローカルを賢くマージする
 async function syncDataOnLogin() {
     if (!currentUser) return;
     try {
         const docRef = doc(db, "users", currentUser.uid);
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
             const cloudData = docSnap.data().history || {};
-            // ローカルにあるがクラウドにないデータなどを考慮してマージ
-            // ここではシンプルに「日付ごとにマージ」する
             const merged = { ...cloudData, ...historyData };
             historyData = merged;
         }
-
-        // マージ結果をローカルとクラウド両方に保存
         saveLocal();
         await syncToFirestore();
     } catch (err) {
@@ -182,6 +177,13 @@ function setupToggles() {
     });
 }
 
+function setToggleValue(groupId, value) {
+    const group = document.getElementById(groupId);
+    group.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-value') === value);
+    });
+}
+
 function getActiveToggleValue(groupId) {
     const activeBtn = document.querySelector(`#${groupId} .toggle-btn.active`);
     return activeBtn ? activeBtn.getAttribute('data-value') : null;
@@ -196,21 +198,36 @@ btnSave.addEventListener('click', async () => {
     const comment = inputComment.value;
 
     if (!dateStr) { alert('ひにちを いれてね！'); return; }
-    if (!historyData[dateStr]) historyData[dateStr] = [];
 
     const entry = { time, type, amount, urge, comment, timestamp: Date.now() };
-    historyData[dateStr].push(entry);
-    historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
+
+    if (editingKey !== null && editingIndex !== null) {
+        // 編集保存
+        historyData[editingKey][editingIndex] = entry;
+        editingKey = null;
+        editingIndex = null;
+        btnSave.textContent = 'きろくをのこす！';
+        btnSave.style.background = '';
+    } else {
+        // 新規保存
+        if (!historyData[dateStr]) historyData[dateStr] = [];
+        historyData[dateStr].push(entry);
+    }
+
+    if (historyData[dateStr]) {
+        historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
+    }
 
     saveLocal();
     await syncToFirestore();
 
     const originalText = btnSave.textContent;
     btnSave.textContent = '✅ きろくしたよ！';
+    const originalBg = btnSave.style.background;
     btnSave.style.background = '#81c784';
     setTimeout(() => {
         btnSave.textContent = originalText;
-        btnSave.style.background = '';
+        btnSave.style.background = originalBg;
     }, 1500);
 
     if (type === 'success') { launchConfetti(); } else { showPuffyToast(); }
@@ -351,6 +368,7 @@ function renderLog() {
     const todayStr = formatDateForInput(new Date());
     logDateLabel.textContent = (activeViewDate === todayStr) ? 'きょう' : activeViewDate.replace(/-/g, '/');
     logListEl.innerHTML = logs.length ? '' : '<p style="color:#cfd8dc; font-size:0.9rem;">まだ きろくが ありません</p>';
+
     logs.forEach((log, index) => {
         const div = document.createElement('div');
         div.className = 'log-item animate-pop';
@@ -358,6 +376,7 @@ function renderLog() {
         const urgeJp = log.urge === 'yes' ? '尿意あり' : '尿意なし';
         const icon = log.type === 'success' ? '☀️' : '🌈';
         const statusText = log.type === 'success' ? 'できた！' : 'おしい！';
+
         div.innerHTML = `
             <div class="log-time">${log.time}</div>
             <div class="log-icon">${icon}</div>
@@ -365,11 +384,15 @@ function renderLog() {
                 <div class="log-details">${statusText} / ${amountJp} / ${urgeJp}</div>
                 ${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}
             </div>
-            <button class="delete-btn" data-key="${activeViewDate}" data-index="${index}" style="background:none; border:none; color:#ff8b8b; font-size:0.8rem; cursor:pointer;">削除</button>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <button class="edit-btn" data-key="${activeViewDate}" data-index="${index}" style="background:none; border:none; color:#72c6ef; font-size:0.8rem; cursor:pointer;">しゅうせい</button>
+                <button class="delete-btn" data-key="${activeViewDate}" data-index="${index}" style="background:none; border:none; color:#ff8b8b; font-size:0.8rem; cursor:pointer;">サヨナラ</button>
+            </div>
         `;
         logListEl.appendChild(div);
     });
 
+    // 削除イベント
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const key = e.target.getAttribute('data-key');
@@ -383,6 +406,36 @@ function renderLog() {
             }
         });
     });
+
+    // 修正イベント
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const key = e.target.getAttribute('data-key');
+            const index = parseInt(e.target.getAttribute('data-index'));
+            startEdit(key, index);
+        });
+    });
+}
+
+function startEdit(key, index) {
+    const log = historyData[key][index];
+    editingKey = key;
+    editingIndex = index;
+
+    // フォームに値をセット
+    inputDate.value = key;
+    inputTime.value = log.time;
+    inputComment.value = log.comment || '';
+    setToggleValue('status-toggle', log.type);
+    setToggleValue('urge-toggle', log.urge);
+    setToggleValue('amount-toggle', log.amount);
+
+    // ボタンの見た目変更
+    btnSave.textContent = '✨ しゅうせいする！';
+    btnSave.style.background = '#ffd93d';
+
+    // 入力エリアまでスクロール
+    document.querySelector('.today-card').scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderCalendar() {
