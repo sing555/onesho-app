@@ -121,10 +121,31 @@ function renderHeatmap() {
     });
 
     const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
-    for (let day = 0; day < 7; day++) {
+
+    // Header row for weekdays
+    const emptyCorner = document.createElement('div');
+    emptyCorner.className = 'hour-label'; // style placeholder
+    grid.appendChild(emptyCorner);
+
+    dayLabels.forEach(day => {
         const label = document.createElement('div');
-        label.className = 'day-label'; label.textContent = dayLabels[day]; grid.appendChild(label);
-        for (let hour = 0; hour < 24; hour++) {
+        label.className = 'day-label-header';
+        label.textContent = day;
+        grid.appendChild(label);
+    });
+
+    // Body: Hours rows
+    for (let hour = 0; hour < 24; hour++) {
+        // Left label for the hour
+        const hLabel = document.createElement('div');
+        hLabel.className = 'hour-label';
+        // Show labels only for 0, 4, 8, 12, 16, 20
+        if (hour % 4 === 0) {
+            hLabel.textContent = hour;
+        }
+        grid.appendChild(hLabel);
+
+        for (let day = 0; day < 7; day++) {
             const count = matrix[day][hour];
             const cell = document.createElement('div');
             let level = 0;

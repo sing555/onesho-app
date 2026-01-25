@@ -187,8 +187,8 @@ section h3 {
 
 .heatmap-grid {
     display: grid;
-    grid-template-columns: 25px repeat(24, 1fr);
-    gap: 2px;
+    grid-template-columns: 25px repeat(7, 1fr);
+    gap: 3px;
 }
 
 .heatmap-cell {
@@ -197,13 +197,23 @@ section h3 {
     background: #f1f5f9;
 }
 
-.day-label {
+.day-label-header {
+    font-size: 0.65rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    padding-bottom: 4px;
+}
+
+.hour-label {
     font-size: 0.6rem;
     color: #94a3b8;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-weight: 600;
+    justify-content: flex-end;
+    padding-right: 5px;
 }
 
 .level-1 {
