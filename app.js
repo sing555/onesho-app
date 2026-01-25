@@ -60,11 +60,12 @@ const btnCloseGacha = document.getElementById('btn-close-gacha');
 const prizeStarsEl = document.getElementById('prize-stars');
 const prizeIconEl = document.getElementById('prize-icon');
 const prizeNameEl = document.getElementById('prize-name');
+const rarityGuideEl = document.getElementById('rarity-guide');
 
 let selectedMonth = new Date().getMonth();
 let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
-let currentHeatmapView = 'accident'; // 'accident' or 'rhythm'
+let currentHeatmapView = 'accident';
 
 const STICKER_THRESHOLD = 100;
 const levelNames = ['トイレの たまご', 'トイレの ひよこ', 'おしっこ ガードマン', 'おしっこ ナイト', 'トイレの 王さま'];
@@ -93,6 +94,7 @@ function triggerHaptic(intensity = 15) {
 }
 
 function formatDateForInput(date) {
+    if (!date) return "";
     const d = new Date(date);
     let m = '' + (d.getMonth() + 1), dy = '' + d.getDate(), y = d.getFullYear();
     if (m.length < 2) m = '0' + m; if (dy.length < 2) dy = '0' + dy;
@@ -110,9 +112,8 @@ onAuthStateChanged(auth, async (user) => {
         init();
     } else {
         currentUser = null;
-        if (appContent.style.display !== 'flex') {
-            loginOverlay.style.display = 'flex';
-        }
+        loginOverlay.style.display = 'flex';
+        appContent.style.display = 'none';
     }
 });
 
@@ -131,12 +132,11 @@ function renderAll() {
     renderCollectionUI();
 }
 
-// --- Analysis View Toggle ---
+// --- Analysis ---
 window.setHeatmapView = (view) => {
     currentHeatmapView = view;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`view-${view}`).classList.add('active');
-    triggerHaptic(5);
     renderHeatmap();
 };
 
@@ -145,7 +145,6 @@ function renderHeatmap() {
     if (!grid) return;
     grid.innerHTML = '';
     const matrix = Array(7).fill(0).map(() => Array(24).fill(0));
-
     Object.keys(historyData).forEach(dateStr => {
         const date = new Date(dateStr);
         const day = date.getDay();
@@ -153,35 +152,26 @@ function renderHeatmap() {
             const h = parseInt(entry.time.split(':')[0]);
             if (currentHeatmapView === 'accident') {
                 if (entry.type === 'fail') matrix[day][h]++;
-            } else {
-                matrix[day][h]++;
-            }
+            } else { matrix[day][h]++; }
         });
     });
-
     const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
     for (let day = 0; day < 7; day++) {
-        const label = document.createElement('div');
-        label.className = 'day-label'; label.textContent = dayLabels[day]; grid.appendChild(label);
+        const label = document.createElement('div'); label.className = 'day-label'; label.textContent = dayLabels[day]; grid.appendChild(label);
         for (let hour = 0; hour < 24; hour++) {
-            const count = matrix[day][hour];
-            const cell = document.createElement('div');
-            let level = 0;
-            if (count > 0) level = 1;
-            if (count > 2) level = 2;
-            if (count > 4) level = 3;
-            cell.className = `heatmap-cell level-${level}`;
-            grid.appendChild(cell);
+            const count = matrix[day][hour]; const cell = document.createElement('div');
+            let level = 0; if (count > 0) level = 1; if (count > 2) level = 2; if (count > 4) level = 3;
+            cell.className = `heatmap-cell level-${level}`; grid.appendChild(cell);
         }
     }
 }
 
-// --- Animal Lottery ---
-async function runAnimalLottery() {
+// --- Lottery ---
+async function runLottery() {
     gachaOverlay.style.display = 'flex';
     gachaBox.style.display = 'block';
     gachaResult.style.display = 'none';
-    gachaLoadingText.textContent = "どうぶつ くじ引き中... なにが出るかな？";
+    gachaLoadingText.textContent = "どうぶつ くじ引き中...";
 
     await new Promise(r => setTimeout(r, 1500));
 
@@ -201,6 +191,11 @@ async function runAnimalLottery() {
     prizeIconEl.textContent = prize.emoji;
     prizeNameEl.textContent = prize.name;
 
+    // Rarity Guide Visualization
+    rarityGuideEl.innerHTML = 'ランキング: ' + ANIMAL_POOL.map(a =>
+        `<span style="${a.id === prize.id ? 'font-weight:bold; color:#fbc02d; text-decoration:underline;' : 'opacity:0.4;'}">${a.emoji}</span>`
+    ).join(' > ');
+
     if (prize.stars >= 4) { launchConfetti(); triggerHaptic([100, 50, 100]); } else { triggerHaptic(50); }
 }
 
@@ -209,42 +204,37 @@ btnCloseGacha.addEventListener('click', () => {
     renderAll();
 });
 
-// --- Data CRUD ---
+// --- Actions ---
 btnSave.addEventListener('click', async () => {
     triggerHaptic(30);
     const dateStr = inputDate.value;
-    const time = inputTime.value;
-    const type = getActiveToggleValue('status-toggle');
-    const amount = getActiveToggleValue('amount-toggle');
-    const urge = getActiveToggleValue('urge-toggle');
-    const comment = inputComment.value;
-
-    if (!dateStr) { alert('日にちをいれてね！'); return; }
-    const entry = { time, type, amount, urge, comment, timestamp: Date.now() };
-
-    if (editingKey !== null && editingIndex !== null) {
-        historyData[editingKey][editingIndex] = entry;
-        editingKey = null; editingIndex = null;
-        btnSave.textContent = 'きろくをのこす！';
-    } else {
-        if (!historyData[dateStr]) historyData[dateStr] = [];
-        historyData[dateStr].push(entry);
-        setTimeout(runAnimalLottery, 800);
-    }
+    const entry = {
+        time: inputTime.value,
+        type: getActiveToggleValue('status-toggle'),
+        amount: getActiveToggleValue('amount-toggle'),
+        urge: 'unknown', comment: inputComment.value, timestamp: Date.now()
+    };
+    if (!dateStr) return;
+    if (editingKey !== null && editingIndex !== null) { historyData[editingKey][editingIndex] = entry; editingKey = null; editingIndex = null; }
+    else { if (!historyData[dateStr]) historyData[dateStr] = []; historyData[dateStr].push(entry); }
     saveLocal(); await syncToFirestore();
-    inputComment.value = ''; activeViewDate = dateStr; renderAll();
+    btnSave.textContent = '✅ きろくしました！';
+    setTimeout(() => { btnSave.textContent = 'きろくをのこす！（くじなし）'; }, 1500);
+    activeViewDate = dateStr; renderAll();
 });
 
 window.quickLog = async function (type) {
     triggerHaptic(40);
     const now = new Date();
     const dateStr = formatDateForInput(now);
-    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const entry = {
+        time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        type, amount: 'medium', urge: 'unknown', comment: 'クイック！', timestamp: Date.now()
+    };
     if (!historyData[dateStr]) historyData[dateStr] = [];
-    const entry = { time, type, amount: 'medium', urge: 'unknown', comment: 'クイック！', timestamp: Date.now() };
     historyData[dateStr].push(entry);
     saveLocal(); await syncToFirestore();
-    setTimeout(runAnimalLottery, 800);
+    setTimeout(runLottery, 500);
     activeViewDate = dateStr; renderAll();
 };
 
@@ -254,46 +244,15 @@ function renderLog() {
     const todayStr = formatDateForInput(new Date());
     logDateLabel.textContent = (activeViewDate === todayStr) ? 'きょう' : activeViewDate.replace(/-/g, '/');
     logListEl.innerHTML = '';
+    if (logs.length === 0) { logListEl.innerHTML = '<p style="color:#ccc;">まだ きろくが ありません</p>'; return; }
 
-    if (logs.length === 0) {
-        logListEl.innerHTML = '<p style="color:#cfd8dc; font-size:0.9rem;">まだ きろくが ありません</p>';
-        return;
-    }
-
-    // 直近3件のみ表示
-    const displayLogs = [...logs].reverse().slice(0, 3);
-
-    displayLogs.forEach((log) => {
-        // 元のインデックスを見つける（削除・編集用）
-        const realIndex = logs.indexOf(log);
+    // Recent 3 only
+    [...logs].reverse().slice(0, 3).forEach((log) => {
         const div = document.createElement('div'); div.className = 'log-item animate-pop';
-        const icon = log.type === 'success' ? '☀️' : '🌈';
-        const typeText = log.type === 'success' ? '成功' : 'おもらし';
-        div.innerHTML = `
-            <div class="log-time">${log.time}</div><div class="log-icon">${icon}</div>
-            <div class="log-content"><div class="log-details">${typeText} / ${log.urge === 'yes' ? '尿意あり' : 'なし'}</div>${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}</div>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-                <button class="edit-btn" onclick="startEdit('${activeViewDate}', ${realIndex})" style="background:none; border:none; color:#72c6ef; font-size:0.8rem; cursor:pointer;">なおす</button>
-            </div>
-        `;
+        div.innerHTML = `<div class="log-time">${log.time}</div><div class="log-icon">${log.type === 'success' ? '☀️' : '🌈'}</div><div class="log-content"><div class="log-details">${log.type === 'success' ? 'できた' : 'おもらし'} / ${log.amount}</div></div>`;
         logListEl.appendChild(div);
     });
-
-    if (logs.length > 3) {
-        const more = document.createElement('div');
-        more.style.cssText = 'font-size:0.7rem; color:#999; text-align:center; margin-top:5px;';
-        more.textContent = `ほか ${logs.length - 3} 件のきろく（カレンダーから確認できます）`;
-        logListEl.appendChild(more);
-    }
 }
-
-window.startEdit = (key, index) => {
-    const log = historyData[key][index]; editingKey = key; editingIndex = index;
-    inputDate.value = key; inputTime.value = log.time; inputComment.value = log.comment || '';
-    setToggleValue('status-toggle', log.type); setToggleValue('urge-toggle', log.urge); setToggleValue('amount-toggle', log.amount);
-    btnSave.textContent = '✨ しゅうせいする！';
-    document.querySelector('.parent-section').scrollIntoView({ behavior: 'smooth' });
-};
 
 function updateStickers() {
     let totalXP = 0;
@@ -304,19 +263,6 @@ function updateStickers() {
     if (levelNameEl) levelNameEl.textContent = levelNames[Math.min(level, levelNames.length - 1)];
     if (xpBarFill) xpBarFill.style.width = `${(currentXP / STICKER_THRESHOLD) * 100}%`;
     if (xpStatusText) xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
-
-    const icons = ['🐣', '🐥', '🛡️', '⚔️', '👑'];
-    const stickerGrid = document.getElementById('sticker-grid');
-    if (stickerGrid) {
-        stickerGrid.innerHTML = '';
-        icons.forEach((s, i) => {
-            const div = document.createElement('div');
-            const isActive = i < level;
-            div.className = `sticker-item ${isActive ? 'active animate-pop' : ''}`;
-            div.textContent = isActive ? s : '？';
-            stickerGrid.appendChild(div);
-        });
-    }
 }
 
 function renderCollectionUI() {
@@ -326,7 +272,7 @@ function renderCollectionUI() {
         const div = document.createElement('div'); div.className = 'prize-slot';
         const animalId = gachaData.collection[i];
         if (animalId) { const animal = ANIMAL_POOL.find(a => a.id === animalId); div.textContent = animal ? animal.emoji : '🐾'; }
-        else { div.textContent = '？'; }
+        else div.textContent = '？';
         prizeCollectionEl.appendChild(div);
     }
 }
@@ -342,16 +288,14 @@ async function syncDataOnLogin() {
             if (data.gacha) gachaData = { ...data.gacha, ...gachaData };
         }
         saveLocal();
-    } catch (err) { console.error("Fetch Error:", err); }
+    } catch (err) { console.error("Sync Error", err); }
 }
 
 async function syncToFirestore() {
     if (!currentUser) return;
     try {
-        await setDoc(doc(db, "users", currentUser.uid), {
-            history: historyData, gacha: gachaData, updatedAt: Date.now()
-        }, { merge: true });
-    } catch (err) { console.error("Sync Error:", err); }
+        await setDoc(doc(db, "users", currentUser.uid), { history: historyData, gacha: gachaData, updatedAt: Date.now() }, { merge: true });
+    } catch (err) { console.error("Cloud Error", err); }
 }
 
 function saveLocal() {
@@ -367,22 +311,12 @@ function setDefaultDateTime() {
 
 function setupToggles() {
     document.querySelectorAll('.btn-toggle-group').forEach(group => {
-        const newGroup = group.cloneNode(true);
-        group.parentNode.replaceChild(newGroup, group);
-        newGroup.addEventListener('click', (e) => {
+        group.addEventListener('click', (e) => {
             if (e.target.classList.contains('toggle-btn')) {
-                triggerHaptic(10);
-                newGroup.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+                group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
             }
         });
-    });
-}
-
-function setToggleValue(groupId, value) {
-    const group = document.getElementById(groupId);
-    group.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-value') === value);
     });
 }
 
@@ -395,9 +329,7 @@ function renderCalendar() {
     calendarGridEl.innerHTML = '';
     calendarTitleEl.textContent = `${selectedYear}年 ${selectedMonth + 1}月`;
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-    dayNames.forEach(name => {
-        const div = document.createElement('div'); div.className = 'day-name'; div.textContent = name; calendarGridEl.appendChild(div);
-    });
+    dayNames.forEach(name => { const div = document.createElement('div'); div.className = 'day-name'; div.textContent = name; calendarGridEl.appendChild(div); });
     const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) { calendarGridEl.appendChild(document.createElement('div')); }
@@ -426,14 +358,27 @@ document.getElementById('next-month').addEventListener('click', () => { selected
 
 btnLogin.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(err => { console.error("Login Error:", err); alert("ログインに しっぱいしました。"); });
+    signInWithPopup(auth, provider).catch(err => { console.error("Login Error", err); });
 });
 
-// --- GUEST LOGIN FIX ---
 btnGuest.addEventListener('click', () => {
-    triggerHaptic(20);
     loginOverlay.style.display = 'none';
     appContent.style.display = 'flex';
-    userInfoEl.textContent = "ゲストモード（クラウド保存されません）";
+    userInfoEl.textContent = "テストモード（保存されません）";
     init();
 });
+
+window.generateReport = () => {
+    const reportText = ["【おねしょ卒業レポート】"];
+    const now = new Date(); const month = now.getMonth() + 1;
+    let success = 0, total = 0;
+    Object.keys(historyData).forEach(key => {
+        if (key.includes(`-${String(month).padStart(2, '0')}-`)) {
+            const logs = historyData[key]; total += logs.length; success += logs.filter(e => e.type === 'success').length;
+        }
+    });
+    reportText.push(`${month}月の成績: ${total}回中 ${success}回 成功！`);
+    alert(reportText.join('\n'));
+};
+
+function launchConfetti() { confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } }); }
