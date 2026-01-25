@@ -54,7 +54,7 @@ let selectedMonth = new Date().getMonth();
 let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
 
-const STICKER_THRESHOLD = 5;
+const STICKER_THRESHOLD = 5; // 5個で1シート
 const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
 
 // ユーザーデータ
@@ -71,9 +71,7 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         loginOverlay.style.display = 'none';
         appContent.style.display = 'flex';
-
         userInfoEl.textContent = `${user.email} で ログイン中`;
-
         await syncDataOnLogin();
         init();
     } else {
@@ -84,14 +82,29 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-btnLogin.addEventListener('click', () => {
+function init() {
+    setDefaultDateTime();
+    setupToggles();
+    renderAll();
+}
+
+function renderAll() {
+    renderLog();
+    renderCalendar();
+    updateStats();
+    updateStickers();
+    renderChart();
+}
+
+const loginTask = () => {
     triggerHaptic(20);
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(err => {
         console.error("Login Error:", err);
         alert("ログインに しっぱいしました。");
     });
-});
+};
+btnLogin.addEventListener('click', loginTask);
 
 btnGuest.addEventListener('click', () => {
     triggerHaptic(20);
@@ -109,7 +122,6 @@ btnLogout.addEventListener('click', () => {
     }
 });
 
-// --- Data Sync ---
 async function syncDataOnLogin() {
     if (!currentUser) return;
     try {
@@ -119,11 +131,8 @@ async function syncDataOnLogin() {
             const cloudData = docSnap.data().history || {};
             historyData = { ...cloudData, ...historyData };
         }
-        saveLocal();
-        await syncToFirestore();
-    } catch (err) {
-        console.error("Fetch Error:", err);
-    }
+        saveLocal(); await syncToFirestore();
+    } catch (err) { console.error("Fetch Error:", err); }
 }
 
 async function syncToFirestore() {
@@ -133,46 +142,24 @@ async function syncToFirestore() {
             history: historyData,
             updatedAt: Date.now()
         }, { merge: true });
-    } catch (err) {
-        console.error("Sync Error:", err);
-    }
+    } catch (err) { console.error("Sync Error:", err); }
 }
 
 function saveLocal() {
     localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
 }
 
-// --- App Logic ---
-function init() {
-    setDefaultDateTime();
-    setupToggles();
-    renderAll();
-}
-
-function renderAll() {
-    renderLog();
-    renderCalendar();
-    updateStats();
-    updateStickers();
-    renderChart();
-}
-
 function formatDateForInput(date) {
     const d = new Date(date);
-    let month = '' + (d.getMonth() + 1);
-    let day = '' + d.getDate();
-    const year = d.getFullYear();
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-    return [year, month, day].join('-');
+    let m = '' + (d.getMonth() + 1), dy = '' + d.getDate(), y = d.getFullYear();
+    if (m.length < 2) m = '0' + m; if (dy.length < 2) dy = '0' + dy;
+    return [y, m, dy].join('-');
 }
 
 function setDefaultDateTime() {
     const now = new Date();
     inputDate.value = formatDateForInput(now);
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    inputTime.value = `${hours}:${minutes}`;
+    inputTime.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
 
 function setupToggles() {
@@ -216,8 +203,7 @@ btnSave.addEventListener('click', async () => {
     if (editingKey !== null && editingIndex !== null) {
         historyData[editingKey][editingIndex] = entry;
         editingKey = null; editingIndex = null;
-        btnSave.textContent = 'きろくをのこす！';
-        btnSave.style.background = '';
+        btnSave.textContent = 'きろくをのこす！'; btnSave.style.background = '';
     } else {
         if (!historyData[dateStr]) historyData[dateStr] = [];
         historyData[dateStr].push(entry);
@@ -255,20 +241,34 @@ window.quickLog = async function (type) {
 function updateStickers() {
     let totalSuccess = 0;
     Object.values(historyData).forEach(dayLogs => { totalSuccess += dayLogs.filter(e => e.type === 'success').length; });
+
     const stickerGrid = document.getElementById('sticker-grid');
     const statusText = document.getElementById('sticker-status');
+    const stickerTitle = document.querySelector('.sticker-card h3');
     if (!stickerGrid) return;
+
+    const sheetNumber = Math.floor(totalSuccess / STICKER_THRESHOLD) + 1;
+    const progressInSheet = totalSuccess % STICKER_THRESHOLD;
+
+    if (stickerTitle) stickerTitle.textContent = `ごほうびシール (${sheetNumber}まいめ)`;
+
     stickerGrid.innerHTML = '';
-    const earnedCount = Math.floor(totalSuccess / STICKER_THRESHOLD);
-    const progress = totalSuccess % STICKER_THRESHOLD;
     stickers.forEach((s, i) => {
         const div = document.createElement('div');
-        div.className = `sticker-item ${i < earnedCount ? 'active animate-pop' : ''}`;
-        div.textContent = i < earnedCount ? s : '？';
+        const isActive = i < progressInSheet || (totalSuccess > 0 && progressInSheet === 0);
+        // 特殊ケース：5枚貯まった瞬間は全部表示する
+        const actuallyActive = (progressInSheet === 0 && totalSuccess > 0) ? true : (i < progressInSheet);
+
+        div.className = `sticker-item ${actuallyActive ? 'active animate-pop' : ''}`;
+        div.textContent = actuallyActive ? s : '？';
         stickerGrid.appendChild(div);
     });
-    if (earnedCount < stickers.length) { statusText.textContent = `あと ${STICKER_THRESHOLD - progress}回で 次のシール！`; }
-    else { statusText.textContent = `ぜんぶの シールを あつめたよ！すごい！`; }
+
+    if (progressInSheet === 0 && totalSuccess > 0) {
+        statusText.textContent = `✨ シート完成！すごすぎる！ ✨`;
+    } else {
+        statusText.textContent = `あと ${STICKER_THRESHOLD - progressInSheet}回で つぎのシール！`;
+    }
 }
 
 function renderChart() {
@@ -363,7 +363,7 @@ function renderCalendar() {
     const firstDay = new Date(selectedYear, selectedMonth, 1).getDay(); const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) { calendarGridEl.appendChild(document.createElement('div')); }
     const todayStr = formatDateForInput(new Date());
-    for (let day = 1; day <= daysInMonth; day++) {
+    for (let day = 1; day <= daysInMonth; dy++) {
         const div = document.createElement('div'); div.className = 'day';
         const dayDate = new Date(selectedYear, selectedMonth, day); const key = formatDateForInput(dayDate);
         if (key === todayStr) div.classList.add('today'); if (key === activeViewDate) div.style.borderColor = '#ffd93d';
