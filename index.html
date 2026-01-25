@@ -9,8 +9,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <title>ぴかぴかモーニング - トイレきろく</title>
-    <meta name="description" content="4歳の男の子のためのトイレ記録アプリ。楽しく記録して、おねしょを卒業しよう！">
+    <title>トイレきろく - ぴかぴかモーニング</title>
+    <meta name="description" content="シンプルで使いやすいトイレ記録アプリ。お子様の生活リズムを把握し、おねしょ卒業をサポート。">
 
     <!-- PWA Settings -->
     <meta name="theme-color" content="#72c6ef">
@@ -20,12 +20,9 @@
     <!-- Styles & Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Outfit:wght@400;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Kiwi+Maru:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-
-    <!-- Confetti Library -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- Firebase SDK (Version 10+) -->
     <script type="importmap">
@@ -44,89 +41,82 @@
     <!-- ログインオーバーレイ -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-card animate-pop">
-            <h1>☀️ ぴかぴか モーニング ☀️</h1>
-            <p>きろくを まもるために<br>ログインしてね！</p>
+            <h1>☀️ トイレきろく</h1>
+            <p>データを安全にのこすために<br>ログインをお願いします。</p>
             <button id="btn-login" class="login-btn">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon">
-                Googleで はじめる
+                Googleで ログイン
             </button>
-            <button id="btn-guest" class="guest-link">ログインせずに つかう（テスト用）</button>
+            <button id="btn-guest" class="guest-link">ログインせずに はじめる</button>
 
             <div class="auth-benefit">
-                <p>✅ パパ・ママのスマホで共有できます</p>
-                <p>✅ データをずっとのこせます</p>
+                <p>✅ パパ・ママのスマホでデータを共有可能</p>
+                <p>✅ 機種変更しても記録は消えません</p>
             </div>
         </div>
     </div>
 
-
     <!-- メインコンテンツ -->
-    <div id="app-content" style="display: none; width: 100%;">
+    <div id="app-content" style="display: none;">
         <header>
             <div class="header-content">
                 <div class="header-left">
-                    <h1 id="app-title">☀️ ぴかぴかモーニング ☀️</h1>
+                    <h1 id="app-title">☀️ トイレきろく</h1>
                     <div id="user-info" class="user-info-text"></div>
                 </div>
                 <button id="btn-logout" class="logout-link">ログアウト</button>
             </div>
         </header>
 
-        <div class="emotional-banner" id="emotional-msg">
-            「きろく」は、キラキラな朝への第一歩。
-        </div>
-
         <div class="main-container">
-            <!-- クイック入力（こどももおとなも） -->
-            <section class="quick-card child-section">
-                <h3>🚽 おしっこ できたかな？</h3>
+            <!-- クイック入力 -->
+            <section class="quick-card">
+                <h3>今日の状況</h3>
                 <div class="quick-btns">
                     <button class="quick-btn success" onclick="quickLog('success')">
                         <span class="btn-main-text">☀️ できた！</span>
-                        <span class="btn-sub-text">（トイレで成功）</span>
+                        <span class="btn-sub-text">(トイレで成功)</span>
                     </button>
                     <button class="quick-btn fail" onclick="quickLog('fail')">
-                        <span class="btn-main-text">🌈 おしい！</span>
-                        <span class="btn-sub-text">（おもらし）</span>
+                        <span class="btn-main-text">🌧️ おもらし</span>
+                        <span class="btn-sub-text">(おしい！)</span>
                     </button>
                 </div>
             </section>
 
-            <!-- プログレス -->
-            <section class="sticker-card">
-                <div class="level-header">
-                    <span class="level-badge" id="app-level">Lv.1</span>
-                    <span class="level-title" id="level-name">トイレの たまご</span>
-                </div>
-                <div class="xp-container">
-                    <div class="xp-bar-bg">
-                        <div id="xp-bar-fill" class="xp-bar-fill"></div>
-                    </div>
-                    <div class="xp-text" id="xp-status">あと 100 XP で レベルアップ！</div>
-                </div>
-                <div id="sticker-grid" class="sticker-grid"></div>
-            </section>
-
-            <!-- きょうのログ -->
+            <!-- 履歴 -->
             <section class="history-card">
                 <h3><span id="log-date-label">きょう</span>の ログ</h3>
                 <div id="log-list" class="log-list"></div>
             </section>
 
-            <!-- どうぶつコレクション -->
-            <section class="gacha-card">
-                <div class="gacha-header">
-                    <h3>🐾 どうぶつ コレクション</h3>
-                    <div class="ticket-status">
-                        あつめた数: <span id="collection-count">0</span>
-                    </div>
+            <!-- 週間診断 -->
+            <section class="chart-card">
+                <h3>週間リズムの しんだん</h3>
+                <div class="analysis-tabs">
+                    <button id="view-accident" class="tab-btn active"
+                        onclick="setHeatmapView('accident')">おもらし分布</button>
+                    <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">全おしっこリズム</button>
                 </div>
-                <div id="prize-collection" class="prize-grid"></div>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-header-hours">
+                        <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>23</span>
+                    </div>
+                    <div id="heatmap-grid" class="heatmap-grid"></div>
+                </div>
+                <div class="heatmap-legend">
+                    <span>すくない</span>
+                    <div class="legend-box level-0"></div>
+                    <div class="legend-box level-1"></div>
+                    <div class="legend-box level-2"></div>
+                    <div class="legend-box level-3"></div>
+                    <span>おおい</span>
+                </div>
             </section>
 
-            <!-- くわしい 記録（おとな用） -->
-            <section class="today-card parent-section">
-                <div class="section-badge">おとな用：くわしい きろく</div>
+            <!-- 詳細記録フォーム -->
+            <section class="today-card">
+                <h3>詳細な 記録・修正</h3>
                 <div class="form-group">
                     <label>ひにち</label>
                     <input type="date" id="input-date" class="modern-input">
@@ -136,41 +126,25 @@
                     <input type="time" id="input-time" class="modern-input">
                 </div>
                 <div class="form-group">
-                    <label>どちらだった？</label>
+                    <label>状況</label>
                     <div class="btn-toggle-group" id="status-toggle">
                         <button class="toggle-btn active" data-value="success">☀️ 成功</button>
-                        <button class="toggle-btn" data-value="fail">🌈 おもらし</button>
+                        <button class="toggle-btn" data-value="fail">🌧️ おもらし</button>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>量は？</label>
+                    <label>量</label>
                     <div class="btn-toggle-group" id="amount-toggle">
-                        <button class="toggle-btn" data-value="small">すくない</button>
-                        <button class="toggle-btn active" data-value="medium">ふつう</button>
-                        <button class="toggle-btn" data-value="large">おおい</button>
+                        <button class="toggle-btn" data-value="small">少</button>
+                        <button class="toggle-btn active" data-value="medium">中</button>
+                        <button class="toggle-btn" data-value="large">多</button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>メモ</label>
-                    <input type="text" id="input-comment" placeholder="ひとことメモ" class="modern-input">
+                    <input type="text" id="input-comment" placeholder="メモを残せます" class="modern-input">
                 </div>
-                <button class="submit-btn" id="btn-save">きろくをのこす！（くじなし）</button>
-            </section>
-
-            <!-- 週間診断 -->
-            <section class="chart-card">
-                <h3>週間リズムの しんだん</h3>
-                <div class="analysis-tabs">
-                    <button id="view-accident" class="tab-btn active"
-                        onclick="setHeatmapView('accident')">おもらし分布</button>
-                    <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">おしっこリズム</button>
-                </div>
-                <div class="heatmap-wrapper">
-                    <div class="heatmap-header-hours">
-                        <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>23</span>
-                    </div>
-                    <div id="heatmap-grid" class="heatmap-grid"></div>
-                </div>
+                <button class="submit-btn" id="btn-save">記録を保存する</button>
             </section>
 
             <!-- カレンダー -->
@@ -183,36 +157,13 @@
                 <div class="calendar-grid" id="calendar-grid"></div>
             </section>
 
-            <!-- 医師用レポート -->
+            <!-- 医師用データ -->
             <section class="report-card">
-                <button class="report-btn" onclick="generateReport()">📋 お医者さんに見せるデータを見る</button>
+                <button class="report-btn" onclick="generateReport()">📋 医師提示用データを表示</button>
             </section>
 
-            <div style="font-size: 0.6rem; color: #ccc; margin-top: 20px; text-align: center;">
-                App Version 7.2 (Layout Optimized)
-            </div>
-        </div>
-    </div>
-
-    <!-- くじ引き演出 -->
-    <div id="gacha-overlay" class="login-overlay" style="display: none;">
-        <div class="gacha-animation-container">
-            <div id="gacha-box" class="gacha-box-shake">🧧</div>
-            <p id="gacha-loading-text" style="font-weight: 800; color: #f57f17; font-size: 1.2rem;">
-                どうぶつ くじ引き中...
-            </p>
-
-            <div id="gacha-result" class="prize-result-card animate-pop" style="display: none;">
-                <div class="rarity-stars" id="prize-stars">⭐️⭐️⭐️⭐️⭐️</div>
-                <div class="prize-emoji" id="prize-icon">🦁</div>
-                <div class="prize-name" id="prize-name">ライオン</div>
-
-                <div class="rarity-guide" id="rarity-guide">
-                    <!-- JSでレア度リストを表示 -->
-                </div>
-
-                <button id="btn-close-gacha" class="submit-btn"
-                    style="margin-top: 20px; background: #fbc02d;">あつめる！</button>
+            <div style="font-size: 0.6rem; color: #ccc; margin-top: 30px; text-align: center;">
+                App Version 8.0 (Data Oriented Simplification)
             </div>
         </div>
     </div>
