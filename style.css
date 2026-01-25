@@ -38,17 +38,20 @@ header {
 
 h1 {
     margin: 0;
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     background: linear-gradient(135deg, var(--primary-color), #2196f3);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
+    text-align: center;
 }
 
 .main-container {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
+    margin: 0 auto;
+    /* 確実に中央寄せ */
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -518,16 +521,18 @@ h1 {
 }
 
 .header-content {
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    width: 90%;
+    width: 95%;
     max-width: 500px;
     margin: 0 auto;
+    min-height: 60px;
 }
 
 .header-left {
-    text-align: left;
+    text-align: center;
 }
 
 .user-info-text {
@@ -537,10 +542,14 @@ h1 {
 }
 
 .logout-link {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: #90a4ae;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     text-decoration: underline;
     cursor: pointer;
     white-space: nowrap;
