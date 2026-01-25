@@ -293,6 +293,15 @@ section h3 {
     font-style: italic;
 }
 
+.urge-yes {
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.urge-no {
+    color: #94a3b8;
+}
+
 /* Forms */
 .form-group {
     margin-bottom: 15px;

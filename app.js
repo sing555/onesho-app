@@ -146,6 +146,7 @@ btnSave.addEventListener('click', async () => {
         time: inputTime.value,
         type: getActiveToggleValue('status-toggle'),
         amount: getActiveToggleValue('amount-toggle'),
+        urge: getActiveToggleValue('urge-toggle'),
         comment: inputComment.value,
         timestamp: Date.now()
     };
@@ -176,7 +177,11 @@ window.quickLog = async function (type) {
     const dateStr = formatDateForInput(now);
     const entry = {
         time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
-        type, amount: 'medium', comment: 'クイック記録', timestamp: Date.now()
+        type,
+        amount: 'medium',
+        urge: type === 'success' ? 'yes' : 'no',
+        comment: 'クイック記録',
+        timestamp: Date.now()
     };
     if (!historyData[dateStr]) historyData[dateStr] = [];
     historyData[dateStr].push(entry);
@@ -206,12 +211,14 @@ function renderLog() {
         const icon = log.type === 'success' ? '☀️' : '🌧️';
         const typeLabel = log.type === 'success' ? '成功' : 'おもらし';
         const amtLabel = { small: '少', medium: '中', large: '多' }[log.amount] || '中';
+        const urgeLabel = log.urge === 'yes' ? '尿意あり' : '尿意なし';
+        const urgeClass = log.urge === 'yes' ? 'urge-yes' : 'urge-no';
 
         div.innerHTML = `
             <div class="log-time">${log.time}</div>
             <div class="log-icon">${icon}</div>
             <div class="log-content">
-                <div class="log-details">${typeLabel} / 量:${amtLabel}</div>
+                <div class="log-details">${typeLabel} / 量:${amtLabel} / <span class="${urgeClass}">${urgeLabel}</span></div>
                 ${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}
             </div>
             <div style="display:flex; gap:10px;">
@@ -226,7 +233,9 @@ function renderLog() {
 window.startEdit = (key, index) => {
     const log = historyData[key][index]; editingKey = key; editingIndex = index;
     inputDate.value = key; inputTime.value = log.time; inputComment.value = log.comment || '';
-    setToggleValue('status-toggle', log.type); setToggleValue('amount-toggle', log.amount);
+    setToggleValue('status-toggle', log.type);
+    setToggleValue('amount-toggle', log.amount);
+    setToggleValue('urge-toggle', log.urge || 'no');
     btnSave.textContent = '✨ 編集を確定する';
     document.querySelector('.today-card').scrollIntoView({ behavior: 'smooth' });
 };
