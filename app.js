@@ -372,20 +372,72 @@ btnGuest.addEventListener('click', () => {
 });
 
 window.generateReport = () => {
-    const reportText = ["【おねしょ卒業・分析レポート】"];
-    const now = new Date(); const month = now.getMonth() + 1;
-    let totalSuccess = 0, totalFail = 0;
-    Object.keys(historyData).forEach(key => {
-        if (key.includes(`-${String(month).padStart(2, '0')}-`)) {
+    const reportModal = document.getElementById('report-modal');
+    const reportBody = document.getElementById('report-body');
+    const now = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+    let totalSuccess = 0, totalFail = 0, withUrge = 0, withoutUrge = 0;
+    const dailyLogs = [];
+
+    // Data aggregation for last 30 days
+    Object.keys(historyData).sort().reverse().forEach(key => {
+        const date = new Date(key);
+        if (date >= thirtyDaysAgo) {
             const logs = historyData[key];
-            totalSuccess += logs.filter(e => e.type === 'success').length;
-            totalFail += logs.filter(e => e.type === 'fail').length;
+            logs.forEach(l => {
+                if (l.type === 'success') totalSuccess++;
+                else if (l.type === 'fail') totalFail++;
+
+                if (l.urge === 'yes') withUrge++;
+                else if (l.urge === 'no') withoutUrge++;
+
+                dailyLogs.push({ date: key, ...l });
+            });
         }
     });
-    reportText.push(`${month}月の概況:`);
-    reportText.push(`- トイレ成功: ${totalSuccess}回`);
-    reportText.push(`- おもらし（おしい）: ${totalFail}回`);
-    alert(reportText.join('\n'));
+
+    const total = totalSuccess + totalFail;
+    const successRate = total > 0 ? Math.round((totalSuccess / total) * 100) : 0;
+    const urgeRate = total > 0 ? Math.round((withUrge / total) * 100) : 0;
+
+    reportBody.innerHTML = `
+        <div class="report-section">
+            <h4>📊 直近30日のまとめ</h4>
+            <div class="summary-grid">
+                <div class="summary-item"><span class="summary-val">${successRate}%</span><span class="summary-label">トイレ成功率</span></div>
+                <div class="summary-item"><span class="summary-val">${urgeRate}%</span><span class="summary-label">尿意の自覚率</span></div>
+                <div class="summary-item"><span class="summary-val">${totalSuccess}回</span><span class="summary-label">成功回数</span></div>
+                <div class="summary-item"><span class="summary-val">${totalFail}回</span><span class="summary-label">おもらし回数</span></div>
+            </div>
+        </div>
+        <div class="report-section">
+            <h4>📝 記録詳細 (最新順)</h4>
+            <table class="report-table">
+                <thead>
+                    <tr><th>日付</th><th>時刻</th><th>結果</th><th>尿意</th></tr>
+                </thead>
+                <tbody>
+                    ${dailyLogs.sort((a, b) => b.timestamp - a.timestamp).map(l => `
+                        <tr>
+                            <td>${l.date.split('-').slice(1).join('/')}</td>
+                            <td>${l.time}</td>
+                            <td>${l.type === 'success' ? '☀️' : '🌧️'}</td>
+                            <td>${l.urge === 'yes' ? 'あり' : 'なし'}</td>
+                        </tr>
+                    `).join('')}
+                    ${dailyLogs.length === 0 ? '<tr><td colspan="4">期間内の記録がありません</td></tr>' : ''}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    reportModal.style.display = 'flex';
+};
+
+window.closeReport = () => {
+    document.getElementById('report-modal').style.display = 'none';
 };
 
 window.addEventListener('load', () => {
