@@ -507,6 +507,16 @@ h1 {
     height: 24px;
 }
 
+.guest-link {
+    background: none;
+    border: none;
+    color: #90a4ae;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
 .header-content {
     display: flex;
     justify-content: space-between;

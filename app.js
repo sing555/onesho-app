@@ -11,8 +11,7 @@ import {
     getFirestore,
     doc,
     setDoc,
-    getDoc,
-    onSnapshot
+    getDoc
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
@@ -26,7 +25,9 @@ const analytics = getAnalytics(app);
 const loginOverlay = document.getElementById('login-overlay');
 const appContent = document.getElementById('app-content');
 const btnLogin = document.getElementById('btn-login');
+const btnGuest = document.getElementById('btn-guest');
 const btnLogout = document.getElementById('btn-logout');
+const userInfoEl = document.getElementById('user-info');
 
 const successCountEl = document.getElementById('success-count');
 const calendarTitleEl = document.getElementById('calendar-title');
@@ -46,7 +47,7 @@ let activeViewDate = formatDateForInput(new Date());
 const STICKER_THRESHOLD = 5;
 const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
 
-// ローカルのデータ（Firestoreと同期する）
+// ローカルのデータ（Firestoreと同期対象）
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
 let currentUser = null;
 
@@ -55,21 +56,18 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         loginOverlay.style.display = 'none';
-        appContent.style.display = 'flex'; // blockからflexに変更して中央寄せ
+        appContent.style.display = 'flex';
+        userInfoEl.textContent = `${user.email} で ログイン中 (クラウド同期中)`;
 
-        // ユーザー情報を表示
-        const userInfoEl = document.getElementById('user-info');
-        if (userInfoEl) {
-            userInfoEl.textContent = `${user.email} で ログイン中`;
-        }
-
-        // Firestoreからデータ取得
-        await syncFromFirestore();
+        // Firestoreからデータを読み込み、ローカルとマージする
+        await syncDataOnLogin();
         init();
     } else {
         currentUser = null;
-        loginOverlay.style.display = 'flex';
-        appContent.style.display = 'none';
+        // 自動でログイン画面に戻すが、ゲストモード中は戻さない
+        if (appContent.style.display !== 'flex') {
+            loginOverlay.style.display = 'flex';
+        }
     }
 });
 
@@ -81,13 +79,46 @@ btnLogin.addEventListener('click', () => {
     });
 });
 
+btnGuest.addEventListener('click', () => {
+    loginOverlay.style.display = 'none';
+    appContent.style.display = 'flex';
+    userInfoEl.textContent = "ゲストモード (このブラウザにのみ保存されます)";
+    init();
+});
+
 btnLogout.addEventListener('click', () => {
     if (confirm("ログアウトしますか？")) {
-        signOut(auth);
+        signOut(auth).then(() => {
+            location.reload(); // 状態をクリアするためリロード
+        });
     }
 });
 
 // --- Data Sync ---
+
+// ログイン時にクラウドとローカルを賢くマージする
+async function syncDataOnLogin() {
+    if (!currentUser) return;
+    try {
+        const docRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const cloudData = docSnap.data().history || {};
+            // ローカルにあるがクラウドにないデータなどを考慮してマージ
+            // ここではシンプルに「日付ごとにマージ」する
+            const merged = { ...cloudData, ...historyData };
+            historyData = merged;
+        }
+
+        // マージ結果をローカルとクラウド両方に保存
+        saveLocal();
+        await syncToFirestore();
+    } catch (err) {
+        console.error("Fetch Error:", err);
+    }
+}
+
 async function syncToFirestore() {
     if (!currentUser) return;
     try {
@@ -95,34 +126,27 @@ async function syncToFirestore() {
             history: historyData,
             updatedAt: Date.now()
         }, { merge: true });
+        console.log("Cloud synced.");
     } catch (err) {
         console.error("Sync Error:", err);
     }
 }
 
-async function syncFromFirestore() {
-    if (!currentUser) return;
-    try {
-        const docRef = doc(db, "users", currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            // ローカルより新しいデータがあれば上書き、またはマージ（今回は単純上書き）
-            historyData = data.history || {};
-            localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
-        }
-    } catch (err) {
-        console.error("Fetch Error:", err);
-    }
+function saveLocal() {
+    localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
 }
 
 // --- App Logic ---
 function init() {
     setDefaultDateTime();
     setupToggles();
+    renderAll();
+}
+
+function renderAll() {
+    renderLog();
     renderCalendar();
     updateStats();
-    renderLog();
     updateStickers();
     renderChart();
 }
@@ -147,9 +171,11 @@ function setDefaultDateTime() {
 
 function setupToggles() {
     document.querySelectorAll('.btn-toggle-group').forEach(group => {
-        group.addEventListener('click', (e) => {
+        const newGroup = group.cloneNode(true);
+        group.parentNode.replaceChild(newGroup, group);
+        newGroup.addEventListener('click', (e) => {
             if (e.target.classList.contains('toggle-btn')) {
-                group.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+                newGroup.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
             }
         });
@@ -176,10 +202,9 @@ btnSave.addEventListener('click', async () => {
     historyData[dateStr].push(entry);
     historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
 
-    localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
-    await syncToFirestore(); // クラウドに保存
+    saveLocal();
+    await syncToFirestore();
 
-    // フィードバック
     const originalText = btnSave.textContent;
     btnSave.textContent = '✅ きろくしたよ！';
     btnSave.style.background = '#81c784';
@@ -189,7 +214,6 @@ btnSave.addEventListener('click', async () => {
     }, 1500);
 
     if (type === 'success') { launchConfetti(); } else { showPuffyToast(); }
-
     inputComment.value = '';
     activeViewDate = dateStr;
     renderAll();
@@ -205,10 +229,10 @@ window.quickLog = async function (type) {
     historyData[dateStr].push(entry);
     historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
 
-    localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
+    saveLocal();
     await syncToFirestore();
 
-    const btn = event?.target || document.querySelector(`.quick-btn.${type}`);
+    const btn = document.querySelector(`.quick-btn.${type}`);
     if (btn) {
         const originalText = btn.textContent;
         btn.textContent = '✨ OK!';
@@ -220,14 +244,6 @@ window.quickLog = async function (type) {
     renderAll();
 };
 
-function renderAll() {
-    renderLog();
-    renderCalendar();
-    updateStats();
-    updateStickers();
-    renderChart();
-}
-
 function updateStickers() {
     let totalSuccess = 0;
     Object.values(historyData).forEach(dayLogs => {
@@ -235,6 +251,8 @@ function updateStickers() {
     });
     const stickerGrid = document.getElementById('sticker-grid');
     const statusText = document.getElementById('sticker-status');
+    if (!stickerGrid) return;
+
     stickerGrid.innerHTML = '';
     const earnedCount = Math.floor(totalSuccess / STICKER_THRESHOLD);
     const progress = totalSuccess % STICKER_THRESHOLD;
@@ -352,24 +370,19 @@ function renderLog() {
         logListEl.appendChild(div);
     });
 
-    // 削除ボタンへのイベント付与
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const key = e.target.getAttribute('data-key');
             const index = e.target.getAttribute('data-index');
-            deleteLog(key, index);
+            if (confirm('このきろくを けしても いい？')) {
+                historyData[key].splice(index, 1);
+                if (historyData[key].length === 0) delete historyData[key];
+                saveLocal();
+                await syncToFirestore();
+                renderAll();
+            }
         });
     });
-}
-
-async function deleteLog(key, index) {
-    if (confirm('このきろくを けしても いい？')) {
-        historyData[key].splice(index, 1);
-        if (historyData[key].length === 0) delete historyData[key];
-        localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
-        await syncToFirestore();
-        renderAll();
-    }
 }
 
 function renderCalendar() {
