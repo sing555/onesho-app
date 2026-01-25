@@ -416,3 +416,42 @@ h1 {
     pointer-events: none;
     border: 2px solid #ffcc80;
 }
+
+/* Changelog */
+.changelog-card {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border-radius: 20px;
+    margin-top: 20px;
+    font-size: 0.8rem;
+}
+
+.changelog-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    color: #90a4ae;
+}
+
+.changelog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.changelog-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    line-height: 1.4;
+}
+
+.changelog-date {
+    font-weight: bold;
+    color: var(--primary-color);
+    white-space: nowrap;
+}
+
+.changelog-text {
+    color: #78909c;
+}
