@@ -86,13 +86,23 @@
                 </div>
             </section>
 
-            <!-- デジタルごほうびシール（新機能1） -->
+            <!-- プログレス＆レベルアップ（新機能：ベイビーステップ） -->
             <section class="sticker-card">
-                <h3>ごほうびシール</h3>
-                <div id="sticker-grid" class="sticker-grid">
-                    <!-- JSでシールを表示 -->
+                <div class="level-header">
+                    <span class="level-badge" id="app-level">Lv.1</span>
+                    <span class="level-title" id="level-name">トイレの たまご</span>
                 </div>
-                <p id="sticker-status" style="font-size: 0.8rem; color: #888; margin-top: 10px;">あと 〇回で つぎのシール！</p>
+
+                <div class="xp-container">
+                    <div class="xp-bar-bg">
+                        <div id="xp-bar-fill" class="xp-bar-fill"></div>
+                    </div>
+                    <div class="xp-text" id="xp-status">あと 100 XP で レベルアップ！</div>
+                </div>
+
+                <div id="sticker-grid" class="sticker-grid">
+                    <!-- 獲得したメダル・シールを表示 -->
+                </div>
             </section>
 
             <!-- 記録入力フォーム -->

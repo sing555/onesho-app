@@ -50,12 +50,18 @@ const inputTime = document.getElementById('input-time');
 const inputComment = document.getElementById('input-comment');
 const btnSave = document.getElementById('btn-save');
 
+const xpBarFill = document.getElementById('xp-bar-fill');
+const xpStatusText = document.getElementById('xp-status');
+const appLevelEl = document.getElementById('app-level');
+const levelNameEl = document.getElementById('level-name');
+
 let selectedMonth = new Date().getMonth();
 let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
 
-const STICKER_THRESHOLD = 5; // 5個で1シート
-const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
+const STICKER_THRESHOLD = 100; // 100XPでレベルアップ
+const stickers = ['🐣', '🐥', '🛡️', '⚔️', '👑']; // レベルごとの称号/シール
+const levelNames = ['トイレの たまご', 'トイレの ひよこ', 'おしっこ ガードマン', 'おしっこ ナイト', 'トイレの 王さま'];
 
 // ユーザーデータ
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
@@ -239,36 +245,37 @@ window.quickLog = async function (type) {
 };
 
 function updateStickers() {
-    let totalSuccess = 0;
-    Object.values(historyData).forEach(dayLogs => { totalSuccess += dayLogs.filter(e => e.type === 'success').length; });
+    let totalXP = 0;
+    Object.values(historyData).forEach(dayLogs => {
+        dayLogs.forEach(e => {
+            if (e.type === 'success') totalXP += 50;
+            else totalXP += 20; // 「おしい！」でも20XP進む！
+        });
+    });
 
+    const level = Math.floor(totalXP / STICKER_THRESHOLD);
+    const currentXP = totalXP % STICKER_THRESHOLD;
     const stickerGrid = document.getElementById('sticker-grid');
-    const statusText = document.getElementById('sticker-status');
-    const stickerTitle = document.querySelector('.sticker-card h3');
+
+    // UI更新: レベルとタイトル
+    appLevelEl.textContent = `Lv.${level + 1}`;
+    levelNameEl.textContent = levelNames[Math.min(level, levelNames.length - 1)];
+
+    // UI更新: XPバー
+    const progressPercent = (currentXP / STICKER_THRESHOLD) * 100;
+    xpBarFill.style.width = `${progressPercent}%`;
+    xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
+
+    // UI更新: シール（これまでにクリアしたレベルのシールを表示）
     if (!stickerGrid) return;
-
-    const sheetNumber = Math.floor(totalSuccess / STICKER_THRESHOLD) + 1;
-    const progressInSheet = totalSuccess % STICKER_THRESHOLD;
-
-    if (stickerTitle) stickerTitle.textContent = `ごほうびシール (${sheetNumber}まいめ)`;
-
     stickerGrid.innerHTML = '';
     stickers.forEach((s, i) => {
         const div = document.createElement('div');
-        const isActive = i < progressInSheet || (totalSuccess > 0 && progressInSheet === 0);
-        // 特殊ケース：5枚貯まった瞬間は全部表示する
-        const actuallyActive = (progressInSheet === 0 && totalSuccess > 0) ? true : (i < progressInSheet);
-
-        div.className = `sticker-item ${actuallyActive ? 'active animate-pop' : ''}`;
-        div.textContent = actuallyActive ? s : '？';
+        const isActive = i < level;
+        div.className = `sticker-item ${isActive ? 'active animate-pop' : ''}`;
+        div.textContent = isActive ? s : '？';
         stickerGrid.appendChild(div);
     });
-
-    if (progressInSheet === 0 && totalSuccess > 0) {
-        statusText.textContent = `✨ シート完成！すごすぎる！ ✨`;
-    } else {
-        statusText.textContent = `あと ${STICKER_THRESHOLD - progressInSheet}回で つぎのシール！`;
-    }
 }
 
 function renderChart() {
@@ -363,7 +370,7 @@ function renderCalendar() {
     const firstDay = new Date(selectedYear, selectedMonth, 1).getDay(); const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     for (let i = 0; i < firstDay; i++) { calendarGridEl.appendChild(document.createElement('div')); }
     const todayStr = formatDateForInput(new Date());
-    for (let day = 1; day <= daysInMonth; dy++) {
+    for (let day = 1; day <= daysInMonth; day++) {
         const div = document.createElement('div'); div.className = 'day';
         const dayDate = new Date(selectedYear, selectedMonth, day); const key = formatDateForInput(dayDate);
         if (key === todayStr) div.classList.add('today'); if (key === activeViewDate) div.style.borderColor = '#ffd93d';
