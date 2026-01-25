@@ -110,7 +110,9 @@ onAuthStateChanged(auth, async (user) => {
         init();
     } else {
         currentUser = null;
-        if (appContent.style.display !== 'flex') { loginOverlay.style.display = 'flex'; }
+        if (appContent.style.display !== 'flex') {
+            loginOverlay.style.display = 'flex';
+        }
     }
 });
 
@@ -149,7 +151,6 @@ function renderHeatmap() {
         const day = date.getDay();
         historyData[dateStr].forEach(entry => {
             const h = parseInt(entry.time.split(':')[0]);
-            // 'accident'ビューはお漏らしのみ、'rhythm'ビューは全部（成功＋お漏らし）
             if (currentHeatmapView === 'accident') {
                 if (entry.type === 'fail') matrix[day][h]++;
             } else {
@@ -170,7 +171,6 @@ function renderHeatmap() {
             if (count > 2) level = 2;
             if (count > 4) level = 3;
             cell.className = `heatmap-cell level-${level}`;
-            cell.title = `${dayLabels[day]}曜日 ${hour}時: ${count}回`;
             grid.appendChild(cell);
         }
     }
@@ -253,20 +253,38 @@ function renderLog() {
     const logs = historyData[activeViewDate] || [];
     const todayStr = formatDateForInput(new Date());
     logDateLabel.textContent = (activeViewDate === todayStr) ? 'きょう' : activeViewDate.replace(/-/g, '/');
-    logListEl.innerHTML = logs.length ? '' : '<p style="color:#cfd8dc; font-size:0.9rem;">まだ きろくが ありません</p>';
-    logs.forEach((log, index) => {
+    logListEl.innerHTML = '';
+
+    if (logs.length === 0) {
+        logListEl.innerHTML = '<p style="color:#cfd8dc; font-size:0.9rem;">まだ きろくが ありません</p>';
+        return;
+    }
+
+    // 直近3件のみ表示
+    const displayLogs = [...logs].reverse().slice(0, 3);
+
+    displayLogs.forEach((log) => {
+        // 元のインデックスを見つける（削除・編集用）
+        const realIndex = logs.indexOf(log);
         const div = document.createElement('div'); div.className = 'log-item animate-pop';
         const icon = log.type === 'success' ? '☀️' : '🌈';
-        const typeText = log.type === 'success' ? 'トイレ成功' : 'おもらし';
+        const typeText = log.type === 'success' ? '成功' : 'おもらし';
         div.innerHTML = `
             <div class="log-time">${log.time}</div><div class="log-icon">${icon}</div>
             <div class="log-content"><div class="log-details">${typeText} / ${log.urge === 'yes' ? '尿意あり' : 'なし'}</div>${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}</div>
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <button class="edit-btn" onclick="startEdit('${activeViewDate}', ${index})" style="background:none; border:none; color:#72c6ef; font-size:0.8rem; cursor:pointer;">なおす</button>
+                <button class="edit-btn" onclick="startEdit('${activeViewDate}', ${realIndex})" style="background:none; border:none; color:#72c6ef; font-size:0.8rem; cursor:pointer;">なおす</button>
             </div>
         `;
         logListEl.appendChild(div);
     });
+
+    if (logs.length > 3) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:0.7rem; color:#999; text-align:center; margin-top:5px;';
+        more.textContent = `ほか ${logs.length - 3} 件のきろく（カレンダーから確認できます）`;
+        logListEl.appendChild(more);
+    }
 }
 
 window.startEdit = (key, index) => {
@@ -286,8 +304,19 @@ function updateStickers() {
     if (levelNameEl) levelNameEl.textContent = levelNames[Math.min(level, levelNames.length - 1)];
     if (xpBarFill) xpBarFill.style.width = `${(currentXP / STICKER_THRESHOLD) * 100}%`;
     if (xpStatusText) xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
+
     const icons = ['🐣', '🐥', '🛡️', '⚔️', '👑'];
-    if (calendarGridEl) { /* Reuse sticker-grid logic if needed */ }
+    const stickerGrid = document.getElementById('sticker-grid');
+    if (stickerGrid) {
+        stickerGrid.innerHTML = '';
+        icons.forEach((s, i) => {
+            const div = document.createElement('div');
+            const isActive = i < level;
+            div.className = `sticker-item ${isActive ? 'active animate-pop' : ''}`;
+            div.textContent = isActive ? s : '？';
+            stickerGrid.appendChild(div);
+        });
+    }
 }
 
 function renderCollectionUI() {
@@ -398,4 +427,13 @@ document.getElementById('next-month').addEventListener('click', () => { selected
 btnLogin.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(err => { console.error("Login Error:", err); alert("ログインに しっぱいしました。"); });
+});
+
+// --- GUEST LOGIN FIX ---
+btnGuest.addEventListener('click', () => {
+    triggerHaptic(20);
+    loginOverlay.style.display = 'none';
+    appContent.style.display = 'flex';
+    userInfoEl.textContent = "ゲストモード（クラウド保存されません）";
+    init();
 });
