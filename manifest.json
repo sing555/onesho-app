@@ -1,7 +1,7 @@
 {
-  "name": "ぴかぴかモーニング",
-  "short_name": "ぴかぴか",
-  "description": "おねしょ記録カレンダー",
+  "name": "トイレきろく",
+  "short_name": "トイレきろく",
+  "description": "トイレの記録カレンダー",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f0f9ff",

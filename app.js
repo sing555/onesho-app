@@ -212,7 +212,7 @@ window.generateReport = function () {
         }
     });
 
-    reportText.push(`${month}月のせいせき: ${total}回中 ${success}回 ぴかぴか！`);
+    reportText.push(`${month}月のせいせき: ${total}回中 ${success}回 できた！`);
     reportText.push("\n最近のログ:");
 
     // 直近5件
