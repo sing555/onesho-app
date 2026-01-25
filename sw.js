@@ -1,4 +1,4 @@
-const CACHE_NAME = 'onesho-app-v3'; // バージョンをさらに上げました
+const CACHE_NAME = 'onesho-app-v4'; // バージョンアップ
 const urlsToCache = [
     './',
     'index.html',

@@ -1,4 +1,4 @@
-// App Version: 1.0.2
+// App Version: 1.0.3
 const successCountEl = document.getElementById('success-count');
 const calendarTitleEl = document.getElementById('calendar-title');
 const calendarGridEl = document.getElementById('calendar-grid');
@@ -90,7 +90,20 @@ btnSave.addEventListener('click', () => {
 
     localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
 
-    if (type === 'success') launchConfetti();
+    // フィードバック表示
+    const originalText = btnSave.textContent;
+    btnSave.textContent = '✅ きろくしたよ！';
+    btnSave.style.background = '#81c784';
+    setTimeout(() => {
+        btnSave.textContent = originalText;
+        btnSave.style.background = '';
+    }, 1500);
+
+    if (type === 'success') {
+        launchConfetti();
+    } else {
+        showPuffyToast();
+    }
 
     inputComment.value = '';
     activeViewDate = dateStr; // 記録した日のログを表示
@@ -114,7 +127,7 @@ window.quickLog = function (type) {
         type,
         amount: 'medium',
         urge: 'unknown',
-        comment: 'クイック入力',
+        comment: 'クイック！',
         timestamp: Date.now()
     };
 
@@ -122,7 +135,19 @@ window.quickLog = function (type) {
     historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
     localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
 
-    if (type === 'success') launchConfetti();
+    // ボタンにフィードバック
+    const btn = event?.target || document.querySelector(`.quick-btn.${type}`);
+    if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = '✨ OK!';
+        setTimeout(() => btn.textContent = originalText, 1000);
+    }
+
+    if (type === 'success') {
+        launchConfetti();
+    } else {
+        showPuffyToast();
+    }
 
     activeViewDate = dateStr;
     renderLog();
@@ -218,7 +243,10 @@ window.generateReport = function () {
     // 直近5件
     const allLogs = [];
     Object.keys(historyData).sort().reverse().forEach(date => {
-        historyData[date].forEach(l => allLogs.push(`${date} ${l.time}: ${l.type === 'success' ? '☀️' : '☁️'}`));
+        historyData[date].forEach(l => {
+            const icon = l.type === 'success' ? '☀️' : '🌈';
+            allLogs.push(`${date} ${l.time}: ${icon}`);
+        });
     });
     reportText.push(...allLogs.slice(0, 5));
 
@@ -230,6 +258,14 @@ function launchConfetti() {
         particleCount: 100, spread: 70, origin: { y: 0.6 },
         colors: ['#72c6ef', '#ffd93d', '#ff8b8b', '#ffffff']
     });
+}
+
+function showPuffyToast() {
+    const toast = document.createElement('div');
+    toast.className = 'puffy-toast animate-pop';
+    toast.textContent = '🌈 つぎは はれるよ！';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
 }
 
 function updateStats() {
@@ -259,8 +295,8 @@ function renderLog() {
 
         const amountJp = { small: 'すくない', medium: 'ふつう', large: 'おおい' }[log.amount];
         const urgeJp = log.urge === 'yes' ? '尿意あり' : '尿意なし';
-        const icon = log.type === 'success' ? '☀️' : '☁️';
-        const statusText = log.type === 'success' ? '成功！' : 'もれた';
+        const icon = log.type === 'success' ? '☀️' : '🌈';
+        const statusText = log.type === 'success' ? 'できた！' : 'おしい！';
 
         div.innerHTML = `
             <div class="log-time">${log.time}</div>
@@ -322,9 +358,9 @@ function renderCalendar() {
             const hasFail = dayLogs.some(l => l.type === 'fail');
 
             if (hasSuccess && !hasFail) div.style.background = '#e1f5fe'; // 成功のみ
-            else if (hasFail && !hasSuccess) div.style.background = '#fff9c4'; // 失敗のみ
+            else if (hasFail && !hasSuccess) div.style.background = '#fff3e0'; // おしいのみ
             else if (hasSuccess && hasFail) {
-                div.style.background = 'linear-gradient(135deg, #e1f5fe 50%, #fff9c4 50%)';
+                div.style.background = 'linear-gradient(135deg, #e1f5fe 50%, #fff3e0 50%)';
             }
         }
 
