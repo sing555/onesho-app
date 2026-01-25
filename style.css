@@ -95,11 +95,11 @@ section {
 }
 
 section h3 {
-    margin: 0 0 15px 0;
-    font-size: 1rem;
-    font-weight: 700;
-    border-left: 4px solid var(--primary-color);
-    padding-left: 10px;
+    margin: 0;
+}
+
+.card-header-static {
+    margin-bottom: 15px;
 }
 
 /* Quick Buttons */
@@ -146,6 +146,46 @@ section h3 {
 }
 
 /* Analysis View */
+/* Collapsible Analysis Section */
+.collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.collapsible-header h3 {
+    margin: 0;
+    border-left: 4px solid var(--primary-color);
+    padding-left: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.toggle-icon {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    transition: transform 0.3s;
+}
+
+.chart-card.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, margin-top 0.3s;
+    margin-top: 0;
+}
+
+.chart-card.active .collapsible-content {
+    max-height: 500px;
+    /* Large enough to fit content */
+    margin-top: 15px;
+}
+
 .analysis-tabs {
     display: flex;
     gap: 8px;

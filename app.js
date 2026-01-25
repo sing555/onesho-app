@@ -101,6 +101,11 @@ window.setHeatmapView = (view) => {
     renderHeatmap();
 };
 
+window.toggleAnalysis = () => {
+    const card = document.getElementById('chart-card');
+    card.classList.toggle('active');
+};
+
 function renderHeatmap() {
     const grid = document.getElementById('heatmap-grid');
     if (!grid) return;

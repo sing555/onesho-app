@@ -71,7 +71,9 @@
         <div class="main-container">
             <!-- クイック入力 -->
             <section class="quick-card">
-                <h3>今日の状況</h3>
+                <div class="card-header-static">
+                    <h3>今日の状況</h3>
+                </div>
                 <div class="quick-btns">
                     <button class="quick-btn success" onclick="quickLog('success')">
                         <span class="btn-main-text">☀️ できた！</span>
@@ -86,13 +88,17 @@
 
             <!-- 履歴 -->
             <section class="history-card">
-                <h3><span id="log-date-label">きょう</span>の ログ</h3>
+                <div class="card-header-static">
+                    <h3><span id="log-date-label">きょう</span>の ログ</h3>
+                </div>
                 <div id="log-list" class="log-list"></div>
             </section>
 
             <!-- 詳細記録フォーム -->
             <section class="today-card">
-                <h3>詳細な 記録・修正</h3>
+                <div class="card-header-static">
+                    <h3>詳細な 記録・修正</h3>
+                </div>
                 <div class="form-group">
                     <label>ひにち</label>
                     <input type="date" id="input-date" class="modern-input">
@@ -131,23 +137,28 @@
             </section>
 
             <!-- 週間診断 -->
-            <section class="chart-card">
-                <h3>週間リズムの しんだん</h3>
-                <div class="analysis-tabs">
-                    <button id="view-accident" class="tab-btn active"
-                        onclick="setHeatmapView('accident')">おもらし分布</button>
-                    <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">全おしっこリズム</button>
+            <section class="chart-card" id="chart-card">
+                <div class="collapsible-header" onclick="toggleAnalysis()">
+                    <h3>週間リズムの しんだん</h3>
+                    <span class="toggle-icon">▼ 表示・非表示</span>
                 </div>
-                <div class="heatmap-wrapper">
-                    <div id="heatmap-grid" class="heatmap-grid"></div>
-                </div>
-                <div class="heatmap-legend">
-                    <span>すくない</span>
-                    <div class="legend-box level-0"></div>
-                    <div class="legend-box level-1"></div>
-                    <div class="legend-box level-2"></div>
-                    <div class="legend-box level-3"></div>
-                    <span>おおい</span>
+                <div class="collapsible-content">
+                    <div class="analysis-tabs">
+                        <button id="view-accident" class="tab-btn active"
+                            onclick="setHeatmapView('accident')">おもらし分布</button>
+                        <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">全おしっこリズム</button>
+                    </div>
+                    <div class="heatmap-wrapper">
+                        <div id="heatmap-grid" class="heatmap-grid"></div>
+                    </div>
+                    <div class="heatmap-legend">
+                        <span>すくない</span>
+                        <div class="legend-box level-0"></div>
+                        <div class="legend-box level-1"></div>
+                        <div class="legend-box level-2"></div>
+                        <div class="legend-box level-3"></div>
+                        <span>おおい</span>
+                    </div>
                 </div>
             </section>
 
@@ -167,7 +178,7 @@
             </section>
 
             <div style="font-size: 0.6rem; color: #ccc; margin-top: 30px; text-align: center;">
-                App Version 8.7 (Ultra Compressed Heatmap)
+                App Version 8.8 (Collapsible Analysis added)
             </div>
         </div>
     </div>
