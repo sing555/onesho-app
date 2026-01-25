@@ -160,11 +160,26 @@
                 </div>
             </section>
 
-            <!-- 簡易分析グラフ（新機能2） -->
+            <!-- 傾向分析ヒートマップ（曜日×時間帯） -->
             <section class="chart-card">
-                <h3>じかん帯の けいこう</h3>
-                <canvas id="timeChart" width="100%" height="150px"></canvas>
-                <p style="font-size: 0.7rem; color: #999; margin-top: 5px;">※ じかん帯別の 記録かいすう</p>
+                <h3>週間リズムの しんだん</h3>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-header-hours">
+                        <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>23</span>
+                    </div>
+                    <div id="heatmap-grid" class="heatmap-grid">
+                        <!-- JSで曜日×24時間のセルを生成 -->
+                    </div>
+                </div>
+                <div class="heatmap-legend">
+                    <span>すくない</span>
+                    <div class="legend-box level-0"></div>
+                    <div class="legend-box level-1"></div>
+                    <div class="legend-box level-2"></div>
+                    <div class="legend-box level-3"></div>
+                    <span>おおい</span>
+                </div>
+                <p style="font-size: 0.7rem; color: #999; margin-top: 10px;">※ 直近のデータの 集中している時間が わかります</p>
             </section>
 
             <!-- ごほうびカウンター -->

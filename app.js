@@ -99,7 +99,7 @@ function renderAll() {
     renderCalendar();
     updateStats();
     updateStickers();
-    renderChart();
+    renderHeatmap();
 }
 
 const loginTask = () => {
@@ -249,24 +249,16 @@ function updateStickers() {
     Object.values(historyData).forEach(dayLogs => {
         dayLogs.forEach(e => {
             if (e.type === 'success') totalXP += 50;
-            else totalXP += 20; // 「おしい！」でも20XP進む！
+            else totalXP += 20;
         });
     });
-
     const level = Math.floor(totalXP / STICKER_THRESHOLD);
     const currentXP = totalXP % STICKER_THRESHOLD;
     const stickerGrid = document.getElementById('sticker-grid');
-
-    // UI更新: レベルとタイトル
-    appLevelEl.textContent = `Lv.${level + 1}`;
-    levelNameEl.textContent = levelNames[Math.min(level, levelNames.length - 1)];
-
-    // UI更新: XPバー
-    const progressPercent = (currentXP / STICKER_THRESHOLD) * 100;
-    xpBarFill.style.width = `${progressPercent}%`;
-    xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
-
-    // UI更新: シール（これまでにクリアしたレベルのシールを表示）
+    if (appLevelEl) appLevelEl.textContent = `Lv.${level + 1}`;
+    if (levelNameEl) levelNameEl.textContent = levelNames[Math.min(level, levelNames.length - 1)];
+    if (xpBarFill) xpBarFill.style.width = `${(currentXP / STICKER_THRESHOLD) * 100}%`;
+    if (xpStatusText) xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
     if (!stickerGrid) return;
     stickerGrid.innerHTML = '';
     stickers.forEach((s, i) => {
@@ -278,23 +270,47 @@ function updateStickers() {
     });
 }
 
-function renderChart() {
-    const canvas = document.getElementById('timeChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.offsetWidth; const height = canvas.offsetHeight;
-    const stats = Array(24).fill(0);
-    Object.values(historyData).forEach(dayLogs => { dayLogs.forEach(entry => { const h = parseInt(entry.time.split(':')[0]); stats[h]++; }); });
-    const maxVal = Math.max(...stats, 1);
-    ctx.clearRect(0, 0, width, height);
-    const barWidth = width / 24;
-    stats.forEach((val, i) => {
-        const barHeight = (val / maxVal) * (height - 20);
-        ctx.fillStyle = (i >= 20 || i <= 6) ? '#ffb74d' : '#72c6ef';
-        ctx.fillRect(i * barWidth, height - barHeight, barWidth - 2, barHeight);
+function renderHeatmap() {
+    const grid = document.getElementById('heatmap-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    // Day x Hour データ作成 (0: 日, 1: 月, ...)
+    const matrix = Array(7).fill(0).map(() => Array(24).fill(0));
+
+    Object.keys(historyData).forEach(dateStr => {
+        const date = new Date(dateStr);
+        const day = date.getDay(); // 0-6
+        historyData[dateStr].forEach(entry => {
+            const h = parseInt(entry.time.split(':')[0]);
+            if (entry.type === 'fail') { // おねしょの傾向を可視化
+                matrix[day][h]++;
+            }
+        });
     });
-    ctx.fillStyle = '#999'; ctx.font = '8px sans-serif';
-    ctx.fillText('0じ', 0, height); ctx.fillText('12じ', width / 2 - 10, height); ctx.fillText('23じ', width - 20, height);
+
+    const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+
+    for (let day = 0; day < 7; day++) {
+        // 曜日ラベル
+        const label = document.createElement('div');
+        label.className = 'day-label';
+        label.textContent = dayLabels[day];
+        grid.appendChild(label);
+
+        // 24時間分
+        for (let hour = 0; hour < 24; hour++) {
+            const count = matrix[day][hour];
+            const cell = document.createElement('div');
+            let level = 0;
+            if (count > 0) level = 1;
+            if (count > 2) level = 2;
+            if (count > 4) level = 3;
+            cell.className = `heatmap-cell level-${level}`;
+            cell.title = `${dayLabels[day]}曜日 ${hour}時: ${count}回`;
+            grid.appendChild(cell);
+        }
+    }
 }
 
 window.generateReport = function () {

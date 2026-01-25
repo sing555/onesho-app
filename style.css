@@ -674,3 +674,76 @@ h1 {
     text-align: center;
     font-style: italic;
 }
+
+/* Heatmap Analysis */
+.heatmap-wrapper {
+    position: relative;
+    margin-top: 10px;
+    background: #fcfcfc;
+    padding: 10px;
+    border-radius: 15px;
+    border: 1px solid #f0f0f0;
+}
+
+.heatmap-header-hours {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 5px 5px 30px;
+    font-size: 0.6rem;
+    color: #999;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: 25px repeat(24, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.heatmap-cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: #eee;
+}
+
+.day-label {
+    font-size: 0.6rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Heatmap Levels (Based on count) */
+.level-0 {
+    background: #eee;
+}
+
+.level-1 {
+    background: #c8e6c9;
+}
+
+.level-2 {
+    background: #66bb6a;
+}
+
+.level-3 {
+    background: #2e7d32;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: 0.65rem;
+    color: #999;
+}
+
+.legend-box {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
