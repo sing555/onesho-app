@@ -1,4 +1,4 @@
-const CACHE_NAME = 'onesho-app-v5'; // Auth & Cloud Sync
+const CACHE_NAME = 'onesho-app-v6'; // Network First Update
 const urlsToCache = [
     './',
     'index.html',
@@ -13,42 +13,42 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-    // 新しいバージョンを即座に有効化するために待機をスキップ
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
+        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
     );
 });
 
 self.addEventListener('activate', event => {
-    // 古いキャッシュをクリア
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
+                    if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
                 })
             );
-        }).then(() => {
-            // 新しいService Workerがすぐに制御を開始するようにする
-            return self.clients.claim();
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', event => {
+    // ネットワーク優先 (Network First) 戦略
+    // 常に最新を優先し、失敗（オフライン）した時だけキャッシュを出す
     event.respondWith(
-        caches.match(event.request)
+        fetch(event.request)
             .then(response => {
-                // キャッシュがあればそれを返し、なければネットワークから取得
-                return response || fetch(event.request);
+                // 成功したらキャッシュを更新
+                if (response.status === 200) {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return response;
+            })
+            .catch(() => {
+                // ネットワークがダメならキャッシュから出す
+                return caches.match(event.request);
             })
     );
 });
