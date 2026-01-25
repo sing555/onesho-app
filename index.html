@@ -90,27 +90,6 @@
                 <div id="log-list" class="log-list"></div>
             </section>
 
-            <!-- 週間診断 -->
-            <section class="chart-card">
-                <h3>週間リズムの しんだん</h3>
-                <div class="analysis-tabs">
-                    <button id="view-accident" class="tab-btn active"
-                        onclick="setHeatmapView('accident')">おもらし分布</button>
-                    <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">全おしっこリズム</button>
-                </div>
-                <div class="heatmap-wrapper">
-                    <div id="heatmap-grid" class="heatmap-grid"></div>
-                </div>
-                <div class="heatmap-legend">
-                    <span>すくない</span>
-                    <div class="legend-box level-0"></div>
-                    <div class="legend-box level-1"></div>
-                    <div class="legend-box level-2"></div>
-                    <div class="legend-box level-3"></div>
-                    <span>おおい</span>
-                </div>
-            </section>
-
             <!-- 詳細記録フォーム -->
             <section class="today-card">
                 <h3>詳細な 記録・修正</h3>
@@ -151,6 +130,27 @@
                 <button class="submit-btn" id="btn-save">記録を保存する</button>
             </section>
 
+            <!-- 週間診断 -->
+            <section class="chart-card">
+                <h3>週間リズムの しんだん</h3>
+                <div class="analysis-tabs">
+                    <button id="view-accident" class="tab-btn active"
+                        onclick="setHeatmapView('accident')">おもらし分布</button>
+                    <button id="view-rhythm" class="tab-btn" onclick="setHeatmapView('rhythm')">全おしっこリズム</button>
+                </div>
+                <div class="heatmap-wrapper">
+                    <div id="heatmap-grid" class="heatmap-grid"></div>
+                </div>
+                <div class="heatmap-legend">
+                    <span>すくない</span>
+                    <div class="legend-box level-0"></div>
+                    <div class="legend-box level-1"></div>
+                    <div class="legend-box level-2"></div>
+                    <div class="legend-box level-3"></div>
+                    <span>おおい</span>
+                </div>
+            </section>
+
             <!-- カレンダー -->
             <section class="calendar-card">
                 <div class="calendar-header">
@@ -167,7 +167,7 @@
             </section>
 
             <div style="font-size: 0.6rem; color: #ccc; margin-top: 30px; text-align: center;">
-                App Version 8.4 (Log Sorting Improved)
+                App Version 8.5 (Form Order Updated)
             </div>
         </div>
     </div>
