@@ -21,181 +21,207 @@
 
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Firebase SDK (Version 10+) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js",
+        "firebase/analytics": "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js"
+      }
+    }
+    </script>
 </head>
 
 <body>
-    <header>
-        <h1>☀️ トイレきろく ☀️</h1>
-    </header>
-
-    <div class="main-container">
-        <!-- クイック入力（新機能4） -->
-        <section class="quick-card">
-            <h3>あさの クイック！</h3>
-            <div class="quick-btns">
-                <button class="quick-btn success" onclick="quickLog('success')">☀️ できた！</button>
-                <button class="quick-btn fail" onclick="quickLog('fail')">🌈 おしい！</button>
-            </div>
-        </section>
-
-        <!-- デジタルごほうびシール（新機能1） -->
-        <section class="sticker-card">
-            <h3>ごほうびシール</h3>
-            <div id="sticker-grid" class="sticker-grid">
-                <!-- JSでシールを表示 -->
-            </div>
-            <p id="sticker-status" style="font-size: 0.8rem; color: #888; margin-top: 10px;">あと 〇回で つぎのシール！</p>
-        </section>
-
-        <!-- 記録入力フォーム -->
-        <section class="today-card">
-            <h2>きろくする</h2>
-
-            <div class="form-group">
-                <label>ひにち</label>
-                <input type="date" id="input-date" class="modern-input">
-            </div>
-
-            <div class="form-group">
-                <label>じかん</label>
-                <input type="time" id="input-time" class="modern-input">
-            </div>
-
-            <div class="form-group">
-                <label>おしっこしたくなっていた？</label>
-                <div class="btn-toggle-group" id="urge-toggle">
-                    <button class="toggle-btn active" data-value="yes">あった！</button>
-                    <button class="toggle-btn" data-value="no">なかった</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>どうだった？</label>
-                <div class="btn-toggle-group" id="status-toggle">
-                    <button class="toggle-btn active" data-value="success">☀️ できた！</button>
-                    <button class="toggle-btn" data-value="fail">🌈 おしい！</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>量は？</label>
-                <div class="btn-toggle-group" id="amount-toggle">
-                    <button class="toggle-btn" data-value="small">すくない</button>
-                    <button class="toggle-btn active" data-value="medium">ふつう</button>
-                    <button class="toggle-btn" data-value="large">おおい</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>メモ</label>
-                <input type="text" id="input-comment" placeholder="ひとことメモ" class="modern-input">
-            </div>
-
-            <button class="submit-btn" id="btn-save">きろくをのこす！</button>
-        </section>
-
-        <!-- 履歴 -->
-        <section class="history-card">
-            <h3><span id="log-date-label">きょう</span>の ログ</h3>
-            <div id="log-list" class="log-list">
-                <!-- JSで追加 -->
-            </div>
-        </section>
-
-        <!-- 簡易分析グラフ（新機能2） -->
-        <section class="chart-card">
-            <h3>じかん帯の けいこう</h3>
-            <canvas id="timeChart" width="100%" height="150px"></canvas>
-            <p style="font-size: 0.7rem; color: #999; margin-top: 5px;">※ じかん帯別の 記録かいすう</p>
-        </section>
-
-        <!-- ごほうびカウンター -->
-        <section class="reward-card">
-            <div>今月の できた！</div>
-            <div class="reward-count" id="success-count">0</div>
-            <div>かい ！！</div>
-        </section>
-
-        <!-- カレンダー -->
-        <section class="calendar-card">
-            <div class="calendar-header">
-                <button id="prev-month">◀</button>
-                <h3 id="calendar-title">2024年1月</h3>
-                <button id="next-month">▶</button>
-            </div>
-            <div class="calendar-grid" id="calendar-grid">
-                <!-- JSで生成 -->
-            </div>
-        </section>
-
-        <!-- 医師提示用レポート（新機能3） -->
-        <section class="report-card">
-            <button class="report-btn" onclick="generateReport()">📋 お医者さんに見せる表（画像）を作る</button>
-        </section>
-
-        <!-- アップデート履歴（新要望） -->
-        <section class="changelog-card">
-            <h3>アップデート履歴</h3>
-            <div class="changelog-list">
-                <div class="changelog-item">
-                    <span class="changelog-date">2026/01/25</span>
-                    <span class="changelog-text">🌈 ポジティブな表現(おしい！/虹)と保存時の演出を追加しました。</span>
-                </div>
-                <div class="changelog-item">
-                    <span class="changelog-date">2026/01/25</span>
-                    <span class="changelog-text">🚀 新機能(シール/クイック入力/分析)を追加。「トイレきろく」へ名前を変えました。</span>
-                </div>
-                <div class="changelog-item">
-                    <span class="changelog-date">2026/01/25</span>
-                    <span class="changelog-text">⚙️ 自動更新機能を追加。最新版がすぐに反映されるようになりました。</span>
-                </div>
-                <div class="changelog-item">
-                    <span class="changelog-date">2026/01/24</span>
-                    <span class="changelog-text">🎉 「トイレきろく」アプリがデビューしました！</span>
-                </div>
-            </div>
-        </section>
+    <!-- ログインオーバーレイ（新機能） -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card animate-pop">
+            <h1>☀️ トイレきろく ☀️</h1>
+            <p>せいちょうの きろくを まもるために<br>Googleで ログインしてね！</p>
+            <button id="btn-login" class="login-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon">
+                Googleで ログイン
+            </button>
+        </div>
     </div>
 
-    <script>
-        // Service Workerの登録と更新検知
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(registration => {
-                    console.log('SW registered:', registration);
+    <!-- メインコンテンツ（ログイン後表示） -->
+    <div id="app-content" style="display: none; width: 100%;">
+        <header>
+            <div class="header-content">
+                <h1>☀️ トイレきろく ☀️</h1>
+                <button id="btn-logout" class="logout-link">ログアウト</button>
+            </div>
+        </header>
 
-                    // 新しいService Workerがインストールされた時に通知
-                    registration.onupdatefound = () => {
-                        const installingWorker = registration.installing;
-                        installingWorker.onstatechange = () => {
-                            if (installingWorker.state === 'installed') {
-                                if (navigator.serviceWorker.controller) {
-                                    // 新しいバージョンがある場合
-                                    console.log('New content is available; please refresh.');
-                                    // ユーザーに知らせるか、自動でリロード
-                                    if (confirm('新しいバージョンがあります。更新しますか？')) {
-                                        location.reload();
+        <div class="main-container">
+            <!-- クイック入力（新機能4） -->
+            <section class="quick-card">
+                <h3>あさの クイック！</h3>
+                <div class="quick-btns">
+                    <button class="quick-btn success" onclick="quickLog('success')">☀️ できた！</button>
+                    <button class="quick-btn fail" onclick="quickLog('fail')">🌈 おしい！</button>
+                </div>
+            </section>
+
+            <!-- デジタルごほうびシール（新機能1） -->
+            <section class="sticker-card">
+                <h3>ごほうびシール</h3>
+                <div id="sticker-grid" class="sticker-grid">
+                    <!-- JSでシールを表示 -->
+                </div>
+                <p id="sticker-status" style="font-size: 0.8rem; color: #888; margin-top: 10px;">あと 〇回で つぎのシール！</p>
+            </section>
+
+            <!-- 記録入力フォーム -->
+            <section class="today-card">
+                <h2>きろくする</h2>
+
+                <div class="form-group">
+                    <label>ひにち</label>
+                    <input type="date" id="input-date" class="modern-input">
+                </div>
+
+                <div class="form-group">
+                    <label>じかん</label>
+                    <input type="time" id="input-time" class="modern-input">
+                </div>
+
+                <div class="form-group">
+                    <label>おしっこしたくなっていた？</label>
+                    <div class="btn-toggle-group" id="urge-toggle">
+                        <button class="toggle-btn active" data-value="yes">あった！</button>
+                        <button class="toggle-btn" data-value="no">なかった</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>どうだった？</label>
+                    <div class="btn-toggle-group" id="status-toggle">
+                        <button class="toggle-btn active" data-value="success">☀️ できた！</button>
+                        <button class="toggle-btn" data-value="fail">🌈 おしい！</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>量は？</label>
+                    <div class="btn-toggle-group" id="amount-toggle">
+                        <button class="toggle-btn" data-value="small">すくない</button>
+                        <button class="toggle-btn active" data-value="medium">ふつう</button>
+                        <button class="toggle-btn" data-value="large">おおい</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>メモ</label>
+                    <input type="text" id="input-comment" placeholder="ひとことメモ" class="modern-input">
+                </div>
+
+                <button class="submit-btn" id="btn-save">きろくをのこす！</button>
+            </section>
+
+            <!-- 履歴 -->
+            <section class="history-card">
+                <h3><span id="log-date-label">きょう</span>の ログ</h3>
+                <div id="log-list" class="log-list">
+                    <!-- JSで追加 -->
+                </div>
+            </section>
+
+            <!-- 簡易分析グラフ（新機能2） -->
+            <section class="chart-card">
+                <h3>じかん帯の けいこう</h3>
+                <canvas id="timeChart" width="100%" height="150px"></canvas>
+                <p style="font-size: 0.7rem; color: #999; margin-top: 5px;">※ じかん帯別の 記録かいすう</p>
+            </section>
+
+            <!-- ごほうびカウンター -->
+            <section class="reward-card">
+                <div>今月の できた！</div>
+                <div class="reward-count" id="success-count">0</div>
+                <div>かい ！！</div>
+            </section>
+
+            <!-- カレンダー -->
+            <section class="calendar-card">
+                <div class="calendar-header">
+                    <button id="prev-month">◀</button>
+                    <h3 id="calendar-title">2024年1月</h3>
+                    <button id="next-month">▶</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- JSで生成 -->
+                </div>
+            </section>
+
+            <!-- 医師提示用レポート（新機能3） -->
+            <section class="report-card">
+                <button class="report-btn" onclick="generateReport()">📋 お医者さんに見せる表（画像）を作る</button>
+            </section>
+
+            <!-- アップデート履歴（新要望） -->
+            <section class="changelog-card">
+                <h3>アップデート履歴</h3>
+                <div class="changelog-list">
+                    <div class="changelog-item">
+                        <span class="changelog-date">2026/01/25</span>
+                        <span class="changelog-text">🌈 ポジティブな表現(おしい！/虹)と保存時の演出を追加しました。</span>
+                    </div>
+                    <div class="changelog-item">
+                        <span class="changelog-date">2026/01/25</span>
+                        <span class="changelog-text">🚀 新機能(シール/クイック入力/分析)を追加。「トイレきろく」へ名前を変えました。</span>
+                    </div>
+                    <div class="changelog-item">
+                        <span class="changelog-date">2026/01/25</span>
+                        <span class="changelog-text">⚙️ 自動更新機能を追加。最新版がすぐに反映されるようになりました。</span>
+                    </div>
+                    <div class="changelog-item">
+                        <span class="changelog-date">2026/01/24</span>
+                        <span class="changelog-text">🎉 「トイレきろく」アプリがデビューしました！</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <script>
+            // Service Workerの登録と更新検知
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js').then(registration => {
+                        console.log('SW registered:', registration);
+
+                        // 新しいService Workerがインストールされた時に通知
+                        registration.onupdatefound = () => {
+                            const installingWorker = registration.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // 新しいバージョンがある場合
+                                        console.log('New content is available; please refresh.');
+                                        // ユーザーに知らせるか、自動でリロード
+                                        if (confirm('新しいバージョンがあります。更新しますか？')) {
+                                            location.reload();
+                                        }
                                     }
                                 }
-                            }
+                            };
                         };
-                    };
-                }).catch(error => {
-                    console.error('SW registration failed:', error);
+                    }).catch(error => {
+                        console.error('SW registration failed:', error);
+                    });
                 });
-            });
 
-            // Service Workerが入れ替わった時に発火
-            let refreshing = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    refreshing = true;
-                    window.location.reload();
-                }
-            });
-        }
-    </script>
-    <script src="app.js"></script>
+                // Service Workerが入れ替わった時に発火
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    navigator.serviceWorker.register('sw.js');
+                });
+            }
+        </script>
+        <script type="module" src="app.js"></script>
 </body>
 
 </html>

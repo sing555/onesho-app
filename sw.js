@@ -1,9 +1,10 @@
-const CACHE_NAME = 'onesho-app-v4'; // バージョンアップ
+const CACHE_NAME = 'onesho-app-v5'; // Auth & Cloud Sync
 const urlsToCache = [
     './',
     'index.html',
     'style.css',
     'app.js',
+    'firebase-config.js',
     'manifest.json',
     'icon-192.png',
     'icon-512.png',
