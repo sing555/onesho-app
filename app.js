@@ -222,8 +222,9 @@ function renderLog() {
         return;
     }
 
-    // 最新3件のみ表示（UIをスッキリさせるため）
-    const displayLogs = [...logs].reverse().slice(0, 3);
+    // 時間順に並べ替えて最新3件を表示（UIをスッキリさせるため）
+    const sortedLogs = [...logs].sort((a, b) => a.time.localeCompare(b.time));
+    const displayLogs = sortedLogs.reverse().slice(0, 3);
 
     displayLogs.forEach((log) => {
         const realIndex = logs.indexOf(log);
