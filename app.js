@@ -21,6 +21,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 
+// --- Helpers ---
+function triggerHaptic(intensity = 15) {
+    if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(intensity);
+    }
+}
+
 // --- State ---
 const loginOverlay = document.getElementById('login-overlay');
 const appContent = document.getElementById('app-content');
@@ -78,6 +85,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 btnLogin.addEventListener('click', () => {
+    triggerHaptic(20);
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(err => {
         console.error("Login Error:", err);
@@ -86,6 +94,7 @@ btnLogin.addEventListener('click', () => {
 });
 
 btnGuest.addEventListener('click', () => {
+    triggerHaptic(20);
     loginOverlay.style.display = 'none';
     appContent.style.display = 'flex';
     userInfoEl.textContent = "ゲストモード（クラウド保存されません）";
@@ -172,6 +181,7 @@ function setupToggles() {
         group.parentNode.replaceChild(newGroup, group);
         newGroup.addEventListener('click', (e) => {
             if (e.target.classList.contains('toggle-btn')) {
+                triggerHaptic(10);
                 newGroup.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
             }
@@ -192,6 +202,7 @@ function getActiveToggleValue(groupId) {
 }
 
 btnSave.addEventListener('click', async () => {
+    triggerHaptic(30);
     const dateStr = inputDate.value;
     const time = inputTime.value;
     const type = getActiveToggleValue('status-toggle');
@@ -226,6 +237,7 @@ btnSave.addEventListener('click', async () => {
 });
 
 window.quickLog = async function (type) {
+    triggerHaptic(40);
     const now = new Date();
     const dateStr = formatDateForInput(now);
     const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
