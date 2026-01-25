@@ -1,4 +1,4 @@
-const CACHE_NAME = 'onesho-app-v7'; // Network First Update
+const CACHE_NAME = 'onesho-app-v8'; // Record Delete Fix
 const urlsToCache = [
     './',
     'index.html',

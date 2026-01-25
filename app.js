@@ -43,7 +43,7 @@ const btnSave = document.getElementById('btn-save');
 let selectedMonth = new Date().getMonth();
 let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
-let currentHeatmapView = 'accident'; // 'accident' or 'rhythm'
+let currentHeatmapView = 'accident';
 
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
 let currentUser = null;
@@ -196,10 +196,13 @@ function renderLog() {
         return;
     }
 
-    [...logs].reverse().slice(0, 3).forEach((log) => {
+    // 最新3件のみ表示（UIをスッキリさせるため）
+    const displayLogs = [...logs].reverse().slice(0, 3);
+
+    displayLogs.forEach((log) => {
         const realIndex = logs.indexOf(log);
         const div = document.createElement('div');
-        div.className = 'log-item animate-pop';
+        div.className = 'log-item';
         const icon = log.type === 'success' ? '☀️' : '🌧️';
         const typeLabel = log.type === 'success' ? '成功' : 'おもらし';
         const amtLabel = { small: '少', medium: '中', large: '多' }[log.amount] || '中';
@@ -211,7 +214,10 @@ function renderLog() {
                 <div class="log-details">${typeLabel} / 量:${amtLabel}</div>
                 ${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}
             </div>
-            <button onclick="startEdit('${activeViewDate}', ${realIndex})" style="background:none; border:none; color:#64b5f6; font-size:0.75rem; cursor:pointer;">編集</button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="startEdit('${activeViewDate}', ${realIndex})" style="background:none; border:none; color:#64b5f6; font-size:0.75rem; cursor:pointer;">編集</button>
+                <button onclick="deleteEntry('${activeViewDate}', ${realIndex})" style="background:none; border:none; color:#ef4444; font-size:0.75rem; cursor:pointer;">削除</button>
+            </div>
         `;
         logListEl.appendChild(div);
     });
@@ -223,6 +229,15 @@ window.startEdit = (key, index) => {
     setToggleValue('status-toggle', log.type); setToggleValue('amount-toggle', log.amount);
     btnSave.textContent = '✨ 編集を確定する';
     document.querySelector('.today-card').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.deleteEntry = async (key, index) => {
+    if (!confirm("この記録を削除してもよろしいですか？")) return;
+    triggerHaptic(50);
+    historyData[key].splice(index, 1);
+    if (historyData[key].length === 0) delete historyData[key];
+    saveLocal(); await syncToFirestore();
+    renderAll();
 };
 
 // --- Calendar & Sync ---
@@ -293,6 +308,7 @@ function setupToggles() {
 
 function setToggleValue(groupId, value) {
     const group = document.getElementById(groupId);
+    if (!group) return;
     group.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-value') === value);
     });
