@@ -160,27 +160,22 @@
                 </div>
             </section>
 
-            <!-- がちゃセクション（新機能：報酬予測誤差） -->
+            <!-- どうぶつコレクション（新機能：くじ引き） -->
             <section class="gacha-card">
                 <div class="gacha-header">
-                    <h3>🎁 おたから がちゃ</h3>
+                    <h3>🐾 どうぶつ コレクション</h3>
                     <div class="ticket-status">
-                        🎫 × <span id="gacha-tickets">0</span>
+                        あつめた数: <span id="collection-count">0</span>
                     </div>
                 </div>
-                <div class="gacha-body">
-                    <p class="gacha-hint">きろくを すると、チケットが もらえるよ！</p>
-                    <button id="btn-draw-gacha" class="gacha-btn" disabled>
-                        がちゃを ひく！
-                    </button>
-                </div>
-
-                <div class="collection-area">
-                    <h4>あつめた おたから</h4>
+                <div class="collection-area" style="border:none; margin:0; padding:0;">
                     <div id="prize-collection" class="prize-grid">
                         <!-- コレクションを表示 -->
                     </div>
                 </div>
+                <p style="font-size: 0.7rem; color: #f9a825; margin-top: 10px; font-weight: bold;">
+                    あさの きろくを すると、くじが 引けるよ！
+                </p>
             </section>
 
             <!-- 傾向分析ヒートマップ（曜日×時間帯） -->
@@ -262,18 +257,20 @@
         </div>
     </div>
 
-    <!-- がちゃ演出オーバーレイ -->
+    <!-- くじ引き演出オーバーレイ -->
     <div id="gacha-overlay" class="login-overlay" style="display: none;">
         <div class="gacha-animation-container">
-            <div id="gacha-box" class="gacha-box-shake">🎁</div>
-            <div id="gacha-light" class="gacha-light"></div>
-            <p id="gacha-loading-text">なかが 出るよ... ドキドキ...</p>
+            <div id="gacha-box" class="gacha-box-shake">🧧</div>
+            <p id="gacha-loading-text" style="font-weight: 800; color: #f57f17; font-size: 1.2rem;">
+                どうぶつ くじ引き中...<br>何が出るかな？
+            </p>
 
             <div id="gacha-result" class="prize-result-card animate-pop" style="display: none;">
-                <div class="rarity-badge" id="prize-rarity">UR</div>
-                <div class="prize-emoji" id="prize-icon">🚀</div>
-                <div class="prize-name" id="prize-name">うちゅうせん</div>
-                <button id="btn-close-gacha" class="submit-btn" style="margin-top: 20px;">やったー！</button>
+                <div class="rarity-stars" id="prize-stars">⭐️⭐️⭐️⭐️⭐️</div>
+                <div class="prize-emoji" id="prize-icon">🦁</div>
+                <div class="prize-name" id="prize-name">ライオン</div>
+                <button id="btn-close-gacha" class="submit-btn"
+                    style="margin-top: 25px; background: #fbc02d;">あつめる！</button>
             </div>
         </div>
     </div>

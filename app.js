@@ -55,9 +55,8 @@ const xpStatusText = document.getElementById('xp-status');
 const appLevelEl = document.getElementById('app-level');
 const levelNameEl = document.getElementById('level-name');
 
-// Gacha Elements
-const btnDrawGacha = document.getElementById('btn-draw-gacha');
-const gachaTicketsEl = document.getElementById('gacha-tickets');
+// Lottery (Animal Kujibiki) Elements
+const collectionCountEl = document.getElementById('collection-count');
 const prizeCollectionEl = document.getElementById('prize-collection');
 const gachaOverlay = document.getElementById('gacha-overlay');
 const gachaBox = document.getElementById('gacha-box');
@@ -65,7 +64,7 @@ const gachaResult = document.getElementById('gacha-result');
 const gachaLoadingText = document.getElementById('gacha-loading-text');
 const btnCloseGacha = document.getElementById('btn-close-gacha');
 
-const prizeRarityEl = document.getElementById('prize-rarity');
+const prizeStarsEl = document.getElementById('prize-stars');
 const prizeIconEl = document.getElementById('prize-icon');
 const prizeNameEl = document.getElementById('prize-name');
 
@@ -74,21 +73,16 @@ let selectedYear = new Date().getFullYear();
 let activeViewDate = formatDateForInput(new Date());
 
 const STICKER_THRESHOLD = 100;
-const stickers = ['🐣', '🐥', '🛡️', '⚔️', '👑'];
 const levelNames = ['トイレの たまご', 'トイレの ひよこ', 'おしっこ ガードマン', 'おしっこ ナイト', 'トイレの 王さま'];
 
-// Gacha Prize Pool
-const PRIZE_POOL = [
-    { id: 'toy1', name: 'ミニカー', emoji: '🚗', rarity: 'N' },
-    { id: 'toy2', name: 'あおのでんしゃ', emoji: '💙', rarity: 'N' },
-    { id: 'toy3', name: 'きいろのバス', emoji: '🚌', rarity: 'N' },
-    { id: 'toy4', name: 'サッカーボール', emoji: '⚽', rarity: 'N' },
-    { id: 'toy5', name: 'ショベルカー', emoji: '🏗️', rarity: 'R' },
-    { id: 'toy6', name: 'パトカー', emoji: '🚓', rarity: 'R' },
-    { id: 'toy7', name: 'しょうぼうしゃ', emoji: '🚒', rarity: 'R' },
-    { id: 'toy8', name: 'ライオンくん', emoji: '🦁', rarity: 'SR' },
-    { id: 'toy9', name: 'きょうりゅう', emoji: '🦖', rarity: 'SR' },
-    { id: 'toy10', name: 'かがやくロケット', emoji: '🚀', rarity: 'UR' },
+// Animal Prize Pool (Ranking reflected in rarity)
+// 1. Lion (⭐️⭐️⭐️⭐️⭐️), 2. Giraffe (⭐️⭐️⭐️⭐️), 3. Dog (⭐️⭐️⭐️), 4. Elephant (⭐️⭐️), 5. Dinosaur (⭐️)
+const ANIMAL_POOL = [
+    { id: 'lion', name: 'ライオン', emoji: '🦁', stars: 5, weight: 5 },
+    { id: 'giraffe', name: 'きりん', emoji: '🦒', stars: 4, weight: 15 },
+    { id: 'dog', name: 'いぬ', emoji: '🐶', stars: 3, weight: 25 },
+    { id: 'elephant', name: 'ぞう', emoji: '🐘', stars: 2, weight: 30 },
+    { id: 'dinosaur', name: 'きょうりゅう', emoji: '🦖', stars: 1, weight: 25 },
 ];
 
 // ユーザーデータ
@@ -126,7 +120,7 @@ function renderAll() {
     updateStats();
     updateStickers();
     renderHeatmap();
-    renderGachaUI();
+    renderCollectionUI();
 }
 
 // --- Data Sync ---
@@ -200,20 +194,18 @@ function getActiveToggleValue(groupId) {
     return activeBtn ? activeBtn.getAttribute('data-value') : null;
 }
 
-// --- Gacha System ---
-function renderGachaUI() {
-    gachaTicketsEl.textContent = gachaData.tickets;
-    btnDrawGacha.disabled = gachaData.tickets <= 0;
-
+// --- Animal Lottery System ---
+function renderCollectionUI() {
+    collectionCountEl.textContent = gachaData.collection.length;
     prizeCollectionEl.innerHTML = '';
-    // 最大10個のスロットを表示
+    // 最大10個のスロットを表示（持っているものを優先）
     for (let i = 0; i < 10; i++) {
         const div = document.createElement('div');
         div.className = 'prize-slot';
-        if (gachaData.collection[i]) {
-            const prize = PRIZE_POOL.find(p => p.id === gachaData.collection[i]);
-            div.textContent = prize ? prize.emoji : '？';
-            div.className += ` rarity-${prize ? prize.rarity : 'N'}`;
+        const animalId = gachaData.collection[i];
+        if (animalId) {
+            const animal = ANIMAL_POOL.find(a => a.id === animalId);
+            div.textContent = animal ? animal.emoji : '🐾';
         } else {
             div.textContent = '？';
         }
@@ -221,50 +213,48 @@ function renderGachaUI() {
     }
 }
 
-btnDrawGacha.addEventListener('click', () => {
-    if (gachaData.tickets <= 0) return;
-    triggerHaptic(50);
-    gachaData.tickets--;
-    saveLocal();
-    renderGachaUI();
-
-    // がちゃ演出
+async function runAnimalLottery() {
+    // 演出開始
     gachaOverlay.style.display = 'flex';
     gachaBox.style.display = 'block';
     gachaResult.style.display = 'none';
-    gachaLoadingText.textContent = "なかが 出るよ... ドキドキ...";
+    gachaLoadingText.textContent = "どうぶつ くじ引き中... 何が出るかな？";
 
-    setTimeout(() => {
-        // 抽選（報酬予測誤差）
-        const rand = Math.random() * 100;
-        let rarity = 'N';
-        if (rand < 2) rarity = 'UR';
-        else if (rand < 10) rarity = 'SR';
-        else if (rand < 40) rarity = 'R';
+    await new Promise(r => setTimeout(r, 1500)); // 朝の忙しさを考慮し少し短縮
 
-        const possiblePrizes = PRIZE_POOL.filter(p => p.rarity === rarity);
-        const prize = possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)];
-
-        // コレクションに追加
-        gachaData.collection.push(prize.id);
-        saveLocal();
-        syncToFirestore();
-
-        // 結果表示
-        gachaBox.style.display = 'none';
-        gachaLoadingText.textContent = "おたから ゲット！";
-        gachaResult.style.display = 'block';
-        prizeRarityEl.textContent = prize.rarity;
-        prizeRarityEl.className = `rarity-badge rarity-${prize.rarity}`;
-        prizeIconEl.textContent = prize.emoji;
-        prizeNameEl.textContent = prize.name;
-
-        if (prize.rarity === 'UR' || prize.rarity === 'SR') {
-            launchConfetti();
-            triggerHaptic([100, 50, 100]);
+    // 抽選
+    const totalWeight = ANIMAL_POOL.reduce((s, a) => s + a.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let prize = ANIMAL_POOL[ANIMAL_POOL.length - 1];
+    for (const a of ANIMAL_POOL) {
+        if (rand < a.weight) {
+            prize = a;
+            break;
         }
-    }, 2000);
-});
+        rand -= a.weight;
+    }
+
+    // データ保存
+    gachaData.collection.unshift(prize.id); // 最新を前に
+    if (gachaData.collection.length > 50) gachaData.collection.pop(); // 溢れ防止
+    saveLocal();
+    await syncToFirestore();
+
+    // 結果表示
+    gachaBox.style.display = 'none';
+    gachaLoadingText.textContent = "おたから どうぶつ ゲット！";
+    gachaResult.style.display = 'block';
+    prizeStarsEl.textContent = '⭐️'.repeat(prize.stars);
+    prizeIconEl.textContent = prize.emoji;
+    prizeNameEl.textContent = prize.name;
+
+    if (prize.stars >= 4) {
+        launchConfetti();
+        triggerHaptic([100, 50, 100]);
+    } else {
+        triggerHaptic(50);
+    }
+}
 
 btnCloseGacha.addEventListener('click', () => {
     gachaOverlay.style.display = 'none';
@@ -291,8 +281,8 @@ btnSave.addEventListener('click', async () => {
     } else {
         if (!historyData[dateStr]) historyData[dateStr] = [];
         historyData[dateStr].push(entry);
-        // 新規登録ならがちゃチケット付与（習慣化の報酬）
-        gachaData.tickets++;
+        // 新規登録なら自動くじ引き
+        setTimeout(runAnimalLottery, 800);
     }
 
     if (historyData[dateStr]) historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
@@ -318,13 +308,15 @@ window.quickLog = async function (type) {
     historyData[dateStr].push(entry);
     historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
 
-    // がちゃチケット付与
-    gachaData.tickets++;
-
     saveLocal(); await syncToFirestore();
+
     const btn = document.querySelector(`.quick-btn.${type}`);
     if (btn) { const originalText = btn.textContent; btn.textContent = '✨ OK!'; setTimeout(() => btn.textContent = originalText, 1000); }
     if (type === 'success') { launchConfetti(); } else { showPuffyToast(); }
+
+    // 自動くじ引き開始
+    setTimeout(runAnimalLottery, 800);
+
     activeViewDate = dateStr; renderAll();
 };
 
@@ -345,7 +337,9 @@ function updateStickers() {
     if (xpStatusText) xpStatusText.textContent = `あと ${STICKER_THRESHOLD - currentXP} XP で レベルアップ！`;
     if (!stickerGrid) return;
     stickerGrid.innerHTML = '';
-    stickers.forEach((s, i) => {
+    // ここではレベルバッジを表示（アイコンは上位4種など）
+    const icons = ['🐣', '🐥', '🛡️', '⚔️', '👑'];
+    icons.forEach((s, i) => {
         const div = document.createElement('div');
         const isActive = i < level;
         div.className = `sticker-item ${isActive ? 'active animate-pop' : ''}`;
@@ -379,7 +373,14 @@ function renderHeatmap() {
     }
 }
 
-btnLogin.addEventListener('click', loginTask);
+btnLogin.addEventListener('click', () => {
+    triggerHaptic(20);
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).catch(err => {
+        console.error("Login Error:", err);
+        alert("ログインに しっぱいしました。");
+    });
+});
 btnGuest.addEventListener('click', () => {
     triggerHaptic(20); loginOverlay.style.display = 'none'; appContent.style.display = 'flex';
     userInfoEl.textContent = "ゲストモード（クラウド保存されません）"; init();
