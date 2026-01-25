@@ -25,10 +25,28 @@
 
 <body>
     <header>
-        <h1>☀️ ぴかぴかモーニング ☀️</h1>
+        <h1>☀️ トイレきろく ☀️</h1>
     </header>
 
     <div class="main-container">
+        <!-- クイック入力（新機能4） -->
+        <section class="quick-card">
+            <h3>あさの クイック！</h3>
+            <div class="quick-btns">
+                <button class="quick-btn success" onclick="quickLog('success')">☀️ できた！</button>
+                <button class="quick-btn fail" onclick="quickLog('fail')">☁️ もれた...</button>
+            </div>
+        </section>
+
+        <!-- デジタルごほうびシール（新機能1） -->
+        <section class="sticker-card">
+            <h3>ごほうびシール</h3>
+            <div id="sticker-grid" class="sticker-grid">
+                <!-- JSでシールを表示 -->
+            </div>
+            <p id="sticker-status" style="font-size: 0.8rem; color: #888; margin-top: 10px;">あと 〇回で つぎのシール！</p>
+        </section>
+
         <!-- 記録入力フォーム -->
         <section class="today-card">
             <h2>きろくする</h2>
@@ -84,6 +102,13 @@
             </div>
         </section>
 
+        <!-- 簡易分析グラフ（新機能2） -->
+        <section class="chart-card">
+            <h3>じかん帯の けいこう</h3>
+            <canvas id="timeChart" width="100%" height="150px"></canvas>
+            <p style="font-size: 0.7rem; color: #999; margin-top: 5px;">※ じかん帯別の 記録かいすう</p>
+        </section>
+
         <!-- ごほうびカウンター -->
         <section class="reward-card">
             <div>こんげつの ぴかぴか</div>
@@ -101,6 +126,11 @@
             <div class="calendar-grid" id="calendar-grid">
                 <!-- JSで生成 -->
             </div>
+        </section>
+
+        <!-- 医師提示用レポート（新機能3） -->
+        <section class="report-card">
+            <button class="report-btn" onclick="generateReport()">📋 お医者さんに見せる表（画像）を作る</button>
         </section>
     </div>
 

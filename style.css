@@ -38,8 +38,11 @@ header {
 
 h1 {
     margin: 0;
-    font-size: 1.5rem;
-    color: var(--primary-color);
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--primary-color), #2196f3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     font-weight: 800;
 }
 
@@ -291,4 +294,107 @@ h1 {
 
 .animate-pop {
     animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* New: Quick Card */
+.quick-card {
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.quick-btns {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.quick-btn {
+    flex: 1;
+    padding: 20px 10px;
+    border: none;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.quick-btn.success {
+    background: var(--primary-color);
+}
+
+.quick-btn.fail {
+    background: #cfd8dc;
+}
+
+.quick-btn:active {
+    transform: scale(0.95);
+}
+
+/* New: Sticker Grid */
+.sticker-card {
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+    min-height: 50px;
+}
+
+.sticker-item {
+    font-size: 1.8rem;
+    background: #fdfdfd;
+    border: 2px dashed #eee;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.sticker-item.active {
+    background: #fff;
+    border-style: solid;
+    border-color: var(--secondary-color);
+    box-shadow: 0 4px 8px rgba(255, 217, 61, 0.3);
+}
+
+/* New: Chart & Report */
+.chart-card {
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.chart-card h3 {
+    margin-bottom: 15px;
+}
+
+.report-card {
+    margin-top: 10px;
+}
+
+.report-btn {
+    width: 100%;
+    padding: 15px;
+    background: white;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: 15px;
+    font-weight: bold;
+    cursor: pointer;
 }

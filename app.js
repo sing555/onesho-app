@@ -17,12 +17,17 @@ let activeViewDate = formatDateForInput(new Date()); // 表示・記録対象の
 // データ形式: historyData['YYYY-MM-DD'] = [ { time, type, amount, comment, urge, timestamp }, ... ]
 let historyData = JSON.parse(localStorage.getItem('onesho-v3-history') || '{}');
 
+const STICKER_THRESHOLD = 5; // シール1枚に必要な回数
+const stickers = ['🚒', '🚓', '🦁', '🦖', '🚀'];
+
 function init() {
     setDefaultDateTime();
     setupToggles();
     renderCalendar();
     updateStats();
     renderLog();
+    updateStickers();
+    renderChart();
 }
 
 function formatDateForInput(date) {
@@ -92,7 +97,133 @@ btnSave.addEventListener('click', () => {
     renderLog();
     renderCalendar();
     updateStats();
+    updateStickers();
+    renderChart();
 });
+
+// 新機能4: クイック入力
+window.quickLog = function (type) {
+    const now = new Date();
+    const dateStr = formatDateForInput(now);
+    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    if (!historyData[dateStr]) historyData[dateStr] = [];
+
+    const entry = {
+        time,
+        type,
+        amount: 'medium',
+        urge: 'unknown',
+        comment: 'クイック入力',
+        timestamp: Date.now()
+    };
+
+    historyData[dateStr].push(entry);
+    historyData[dateStr].sort((a, b) => a.time.localeCompare(b.time));
+    localStorage.setItem('onesho-v3-history', JSON.stringify(historyData));
+
+    if (type === 'success') launchConfetti();
+
+    activeViewDate = dateStr;
+    renderLog();
+    renderCalendar();
+    updateStats();
+    updateStickers();
+    renderChart();
+};
+
+// 新機能1: デジタルごほうびシール
+function updateStickers() {
+    let totalSuccess = 0;
+    Object.values(historyData).forEach(dayLogs => {
+        totalSuccess += dayLogs.filter(e => e.type === 'success').length;
+    });
+
+    const stickerGrid = document.getElementById('sticker-grid');
+    const statusText = document.getElementById('sticker-status');
+    stickerGrid.innerHTML = '';
+
+    const earnedCount = Math.floor(totalSuccess / STICKER_THRESHOLD);
+    const progress = totalSuccess % STICKER_THRESHOLD;
+
+    stickers.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = `sticker-item ${i < earnedCount ? 'active animate-pop' : ''}`;
+        div.textContent = i < earnedCount ? s : '？';
+        stickerGrid.appendChild(div);
+    });
+
+    if (earnedCount < stickers.length) {
+        statusText.textContent = `あと ${STICKER_THRESHOLD - progress}回で 次のシール！`;
+    } else {
+        statusText.textContent = `ぜんぶの シールを あつめたよ！すごい！`;
+    }
+}
+
+// 新機能2: 簡易分析グラフ
+function renderChart() {
+    const canvas = document.getElementById('timeChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.offsetWidth;
+    const height = canvas.offsetHeight;
+
+    // 時間帯別の集計 (0-23時)
+    const stats = Array(24).fill(0);
+    Object.values(historyData).forEach(dayLogs => {
+        dayLogs.forEach(entry => {
+            const h = parseInt(entry.time.split(':')[0]);
+            stats[h]++;
+        });
+    });
+
+    const maxVal = Math.max(...stats, 1);
+    ctx.clearRect(0, 0, width, height);
+
+    // 簡易棒グラフ
+    const barWidth = width / 24;
+    stats.forEach((val, i) => {
+        const barHeight = (val / maxVal) * (height - 20);
+        ctx.fillStyle = '#72c6ef';
+        if (i >= 20 || i <= 6) ctx.fillStyle = '#ffb74d'; // 夜間帯の色
+        ctx.fillRect(i * barWidth, height - barHeight, barWidth - 2, barHeight);
+    });
+
+    // 文字
+    ctx.fillStyle = '#999';
+    ctx.font = '8px sans-serif';
+    ctx.fillText('0じ', 0, height);
+    ctx.fillText('12じ', width / 2 - 10, height);
+    ctx.fillText('23じ', width - 20, height);
+}
+
+// 新機能3: レポート生成（簡易アラートで内容を提示）
+window.generateReport = function () {
+    const reportText = ["【トイレきろく レポート】"];
+    const now = new Date();
+    const month = now.getMonth() + 1;
+
+    let success = 0, total = 0;
+    Object.keys(historyData).forEach(key => {
+        if (key.includes(`-${String(month).padStart(2, '0')}-`)) {
+            const logs = historyData[key];
+            total += logs.length;
+            success += logs.filter(e => e.type === 'success').length;
+        }
+    });
+
+    reportText.push(`${month}月のせいせき: ${total}回中 ${success}回 ぴかぴか！`);
+    reportText.push("\n最近のログ:");
+
+    // 直近5件
+    const allLogs = [];
+    Object.keys(historyData).sort().reverse().forEach(date => {
+        historyData[date].forEach(l => allLogs.push(`${date} ${l.time}: ${l.type === 'success' ? '☀️' : '☁️'}`));
+    });
+    reportText.push(...allLogs.slice(0, 5));
+
+    alert(reportText.join('\n') + '\n\n(このテキストをスクショして先生に見せてね！)');
+};
 
 function launchConfetti() {
     confetti({
