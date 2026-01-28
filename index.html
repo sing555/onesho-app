@@ -90,6 +90,31 @@
                 </div>
             </section>
 
+            <!-- 週間サマリー -->
+            <section class="weekly-summary-card" id="weekly-summary">
+                <div class="card-header-static">
+                    <h3>📊 今週のまとめ</h3>
+                </div>
+                <div class="weekly-grid">
+                    <div class="weekly-stat">
+                        <span class="weekly-stat-value" id="weekly-success-rate">--%</span>
+                        <span class="weekly-stat-label">成功率</span>
+                    </div>
+                    <div class="weekly-stat">
+                        <span class="weekly-stat-value" id="weekly-total">--回</span>
+                        <span class="weekly-stat-label">記録数</span>
+                    </div>
+                    <div class="weekly-stat">
+                        <span class="weekly-stat-value" id="weekly-fail">--回</span>
+                        <span class="weekly-stat-label">おもらし</span>
+                    </div>
+                </div>
+                <div id="pattern-alert-container"></div>
+            </section>
+
+            <!-- トースト通知 -->
+            <div id="toast-container" class="toast-container"></div>
+
             <!-- 履歴 -->
             <section class="history-card">
                 <div class="card-header-static">
@@ -182,7 +207,7 @@
             </section>
 
             <div style="font-size: 0.6rem; color: #ccc; margin-top: 30px; text-align: center;">
-                App Version 9.0 (Success Streak added)
+                App Version 10.0 (Weekly Summary & Pattern Analysis)
             </div>
         </div>
     </div>

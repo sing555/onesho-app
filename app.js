@@ -65,6 +65,21 @@ function triggerHaptic(intensity = 15) {
     }
 }
 
+// トースト通知を表示
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 2000);
+}
+
 // --- Auth Handling ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -92,6 +107,7 @@ function renderAll() {
     renderCalendar();
     renderHeatmap();
     updateStreak();
+    renderWeeklySummary();
 }
 
 // --- Analysis View Logic ---
@@ -218,6 +234,11 @@ window.quickLog = async function (type) {
     historyData[dateStr].push(entry);
     saveLocal(); await syncToFirestore();
     activeViewDate = dateStr;
+
+    // トースト通知を表示
+    const message = type === 'success' ? '☀️ 記録しました！' : '🌧️ 記録しました';
+    showToast(message, type);
+
     renderAll();
 };
 
@@ -232,9 +253,9 @@ function renderLog() {
         return;
     }
 
-    // 時間順に並べ替えて最新3件を表示（UIをスッキリさせるため）
+    // 時間順に並べ替えて全て表示
     const sortedLogs = [...logs].sort((a, b) => a.time.localeCompare(b.time));
-    const displayLogs = sortedLogs.reverse().slice(0, 3);
+    const displayLogs = sortedLogs.reverse();
 
     displayLogs.forEach((log) => {
         const realIndex = logs.indexOf(log);
@@ -350,7 +371,18 @@ function renderCalendar() {
             const hasFail = dayLogs.some(l => l.type === 'fail');
             div.style.background = hasFail ? '#fee2e2' : '#e0f2fe';
         }
-        const span = document.createElement('span'); span.textContent = day; div.appendChild(span);
+        // 日付番号
+        const numSpan = document.createElement('span');
+        numSpan.className = 'day-num';
+        numSpan.textContent = day;
+        div.appendChild(numSpan);
+        // 件数バッジ
+        if (dayLogs.length > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'day-badge';
+            badge.textContent = `${dayLogs.length}件`;
+            div.appendChild(badge);
+        }
         div.addEventListener('click', () => { activeViewDate = key; inputDate.value = key; renderAll(); });
         calendarGridEl.appendChild(div);
     }
@@ -373,6 +405,82 @@ async function syncToFirestore() {
     try {
         await setDoc(doc(db, "users", currentUser.uid), { history: historyData, updatedAt: Date.now() }, { merge: true });
     } catch (err) { console.error("Cloud save error", err); }
+}
+
+// 週間サマリーを表示
+function renderWeeklySummary() {
+    const successRateEl = document.getElementById('weekly-success-rate');
+    const totalEl = document.getElementById('weekly-total');
+    const failEl = document.getElementById('weekly-fail');
+    const patternContainer = document.getElementById('pattern-alert-container');
+
+    if (!successRateEl || !totalEl || !failEl) return;
+
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+
+    let totalSuccess = 0, totalFail = 0;
+    const hourCounts = Array(24).fill(0); // 時間帯別のおもらし回数
+
+    Object.keys(historyData).forEach(key => {
+        const date = new Date(key);
+        if (date >= sevenDaysAgo && date <= now) {
+            const logs = historyData[key];
+            logs.forEach(l => {
+                if (l.type === 'success') totalSuccess++;
+                else if (l.type === 'fail') {
+                    totalFail++;
+                    const hour = parseInt(l.time.split(':')[0]);
+                    hourCounts[hour]++;
+                }
+            });
+        }
+    });
+
+    const total = totalSuccess + totalFail;
+    const successRate = total > 0 ? Math.round((totalSuccess / total) * 100) : 0;
+
+    successRateEl.textContent = `${successRate}%`;
+    totalEl.textContent = `${total}回`;
+    failEl.textContent = `${totalFail}回`;
+
+    // 時間帯パターン分析
+    if (patternContainer) {
+        patternContainer.innerHTML = '';
+
+        if (totalFail >= 2) {
+            // 最も多いおもらし時間帯を見つける
+            let maxCount = 0;
+            let peakHours = [];
+
+            // 4時間ブロックで分析
+            for (let block = 0; block < 6; block++) {
+                const start = block * 4;
+                let blockCount = 0;
+                for (let h = start; h < start + 4; h++) {
+                    blockCount += hourCounts[h];
+                }
+                if (blockCount > maxCount) {
+                    maxCount = blockCount;
+                    peakHours = [start];
+                } else if (blockCount === maxCount && blockCount > 0) {
+                    peakHours.push(start);
+                }
+            }
+
+            if (maxCount >= 2 && peakHours.length > 0) {
+                const timeRanges = peakHours.map(h => `${h}〜${h + 4}時`).join('、');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'pattern-alert';
+                alertDiv.innerHTML = `
+                    <div class="pattern-alert-title">⚠️ 注意時間帯</div>
+                    <div class="pattern-alert-text">${timeRanges}に おもらしが多い傾向があります（${maxCount}回/週）</div>
+                `;
+                patternContainer.appendChild(alertDiv);
+            }
+        }
+    }
 }
 
 function saveLocal() { localStorage.setItem('onesho-v3-history', JSON.stringify(historyData)); }
